@@ -1,0 +1,4 @@
+{
+  "ns1": { "sharedKey": "local-ns1-sharedKey", "onlyInLocalNs1": "L1" },
+  "*": { "sharedKey": "local-star-sharedKey", "onlyInLocalStar": "L2" }
+}

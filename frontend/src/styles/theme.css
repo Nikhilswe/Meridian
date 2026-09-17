@@ -1,0 +1,441 @@
+/*
+ * Scaler frontend -- functional baseline styles.
+ *
+ * Colors are defined as CSS custom properties on :root / [data-theme], and
+ * everything else (layout, components) consumes those variables. This is an
+ * intentionally plain baseline -- a later pass will restyle it visually
+ * without needing to touch component markup or class names.
+ */
+
+/* Fallback (before ThemeProvider's effect sets data-theme, and for no-JS) */
+:root {
+  --color-bg: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f0f1f4;
+  --color-text: #1a1d23;
+  --color-text-muted: #6b7280;
+  --color-border: #d8dbe0;
+  --color-primary: #2f5fd6;
+  --color-primary-text: #ffffff;
+  --color-primary-hover: #2650b8;
+
+  --color-success-bg: #e3f5e9;
+  --color-success-text: #1f8a4c;
+  --color-warning-bg: #fdf1dc;
+  --color-warning-text: #9a6400;
+  --color-danger-bg: #fbe4e4;
+  --color-danger-text: #b3261e;
+  --color-info-bg: #e5edfd;
+  --color-info-text: #2f5fd6;
+  --color-neutral-bg: #e9eaee;
+  --color-neutral-text: #4b5058;
+}
+
+:root[data-theme="light"] {
+  --color-bg: #f5f6f8;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f0f1f4;
+  --color-text: #1a1d23;
+  --color-text-muted: #6b7280;
+  --color-border: #d8dbe0;
+  --color-primary: #2f5fd6;
+  --color-primary-text: #ffffff;
+  --color-primary-hover: #2650b8;
+
+  --color-success-bg: #e3f5e9;
+  --color-success-text: #1f8a4c;
+  --color-warning-bg: #fdf1dc;
+  --color-warning-text: #9a6400;
+  --color-danger-bg: #fbe4e4;
+  --color-danger-text: #b3261e;
+  --color-info-bg: #e5edfd;
+  --color-info-text: #2f5fd6;
+  --color-neutral-bg: #e9eaee;
+  --color-neutral-text: #4b5058;
+}
+
+:root[data-theme="dark"] {
+  --color-bg: #14161a;
+  --color-surface: #1d2025;
+  --color-surface-alt: #24272e;
+  --color-text: #e7e9ee;
+  --color-text-muted: #9aa0aa;
+  --color-border: #343841;
+  --color-primary: #6690f2;
+  --color-primary-text: #0d1117;
+  --color-primary-hover: #85a8f5;
+
+  --color-success-bg: #1c3326;
+  --color-success-text: #6fd396;
+  --color-warning-bg: #3a2e14;
+  --color-warning-text: #e0b350;
+  --color-danger-bg: #3a1d1d;
+  --color-danger-text: #f19b96;
+  --color-info-bg: #1d2a44;
+  --color-info-text: #8fb0f5;
+  --color-neutral-bg: #2a2d33;
+  --color-neutral-text: #c2c5cc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 0.75rem;
+  font-weight: 600;
+}
+
+.app-shell {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  flex: 1;
+  padding: 1.5rem;
+  max-width: 960px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* --- Nav --- */
+
+.nav-bar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  background-color: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.nav-bar__brand {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.nav-bar__tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.nav-tab {
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.nav-tab--active {
+  color: var(--color-primary);
+  background-color: var(--color-info-bg);
+}
+
+.nav-bar__end {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nav-bar__user {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+/* --- Cards / layout --- */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.page-centered {
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 4rem);
+}
+
+.card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 1.5rem;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.back-link {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.muted {
+  color: var(--color-text-muted);
+}
+
+/* --- Forms --- */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+.field__label {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea,
+select {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.ticket-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.attachments-editor {
+  margin-bottom: 1rem;
+}
+
+.attachments-editor__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.attachment-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.attachment-row input {
+  flex: 1;
+}
+
+.ticket-overview,
+.case-summary {
+  white-space: pre-wrap;
+  background-color: var(--color-surface-alt);
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.draft-message--readonly {
+  white-space: pre-wrap;
+  background-color: var(--color-surface-alt);
+  border-radius: 6px;
+  padding: 0.75rem;
+}
+
+.case-detail__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.case-detail__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+}
+
+/* --- Buttons --- */
+
+.btn {
+  border: 1px solid transparent;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: var(--color-primary-text);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--color-primary-hover);
+}
+
+.btn-secondary {
+  background-color: var(--color-surface-alt);
+  color: var(--color-text);
+  border-color: var(--color-border);
+}
+
+.btn-small {
+  padding: 0.3rem 0.65rem;
+  font-size: 0.8rem;
+}
+
+.theme-toggle {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.3rem 0.65rem;
+  color: var(--color-text);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+/* --- Table --- */
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.data-table th,
+.data-table td {
+  text-align: left;
+  padding: 0.6rem 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.9rem;
+}
+
+.data-table th {
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.data-table--clickable tbody tr {
+  cursor: pointer;
+}
+
+.data-table--clickable tbody tr:hover {
+  background-color: var(--color-surface-alt);
+}
+
+.pagination {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* --- Status badge --- */
+
+.status-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-badge[data-tone="neutral"] {
+  background-color: var(--color-neutral-bg);
+  color: var(--color-neutral-text);
+}
+
+.status-badge[data-tone="info"] {
+  background-color: var(--color-info-bg);
+  color: var(--color-info-text);
+}
+
+.status-badge[data-tone="warning"] {
+  background-color: var(--color-warning-bg);
+  color: var(--color-warning-text);
+}
+
+.status-badge[data-tone="success"] {
+  background-color: var(--color-success-bg);
+  color: var(--color-success-text);
+}
+
+/* --- Loading / errors --- */
+
+.loading-spinner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.loading-spinner__dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  animation: loading-pulse 1s ease-in-out infinite;
+}
+
+@keyframes loading-pulse {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.error-banner {
+  background-color: var(--color-danger-bg);
+  color: var(--color-danger-text);
+  border-radius: 6px;
+  padding: 0.6rem 0.85rem;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}

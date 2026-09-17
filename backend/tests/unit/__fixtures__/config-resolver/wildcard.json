@@ -1,0 +1,4 @@
+{
+  "ns1": { "sharedKey": "wildcard-ns1-sharedKey", "onlyInWildcardNs1": "W1" },
+  "*": { "sharedKey": "wildcard-star-sharedKey", "onlyInWildcardStar": "W2" }
+}

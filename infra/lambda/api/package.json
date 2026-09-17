@@ -1,0 +1,8 @@
+{
+  "name": "scaler-lambda-api",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "serverless-http": "^3.2.0"
+  }
+}

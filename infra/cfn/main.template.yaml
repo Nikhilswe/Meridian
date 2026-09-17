@@ -1,0 +1,319 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Scaler support-ticketing + case-summariser platform. Region-agnostic (uses
+  pseudo params AWS::Region / AWS::AccountId only -- deploy the same template
+  unmodified into any region). Sized for the ~$60 / 6-month demo budget: all
+  DynamoDB tables are PAY_PER_REQUEST, Lambdas are small/short-lived,
+  API Gateway is HTTP API (cheaper than REST API), and S3 has a lifecycle rule
+  to expire demo attachments after 30 days. See ../../docs/aws-cost-notes.md.
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: beta
+    AllowedValues: [beta, prod]
+    Description: >
+      Selects the backend's ConfigResolver env layer (APP_ENV) used inside
+      the Lambdas, so the exact same wildcard config-fallback rules that
+      govern the offline app also govern the deployed one.
+  LlmProvider:
+    Type: String
+    Default: anthropic
+    AllowedValues: [anthropic, openai, ollama, test-stub]
+  LogRetentionDays:
+    Type: Number
+    Default: 14
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Architectures: [arm64] # cheaper + faster cold start than x86_64
+    MemorySize: 256
+    Timeout: 15
+    Tracing: Active
+    Environment:
+      Variables:
+        APP_ENV: !Ref EnvironmentName
+        AWS_REGION_OVERRIDE: !Ref AWS::Region
+        TICKETS_TABLE: !Ref TicketsTable
+        POLICIES_TABLE: !Ref PoliciesTable
+        ORDERS_TABLE: !Ref OrdersTable
+        ATTACHMENTS_BUCKET: !Ref AttachmentsBucket
+        SECRETS_PREFIX: !Sub "/scaler/${EnvironmentName}/"
+
+Resources:
+  # ---------------------------------------------------------------------
+  # Data layer -- DynamoDB (on-demand billing keeps this near-zero at demo
+  # traffic levels; see cost notes doc)
+  # ---------------------------------------------------------------------
+  TicketsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "scaler-${EnvironmentName}-tickets"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: ticketId
+          AttributeType: S
+        - AttributeName: assigneeId
+          AttributeType: S
+        - AttributeName: creatorId
+          AttributeType: S
+        - AttributeName: ticketCreationDate
+          AttributeType: S
+      KeySchema:
+        - AttributeName: ticketId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: byAssignee
+          KeySchema:
+            - AttributeName: assigneeId
+              KeyType: HASH
+            - AttributeName: ticketCreationDate
+              KeyType: RANGE
+          Projection: { ProjectionType: ALL }
+        - IndexName: byCreator
+          KeySchema:
+            - AttributeName: creatorId
+              KeyType: HASH
+            - AttributeName: ticketCreationDate
+              KeyType: RANGE
+          Projection: { ProjectionType: ALL }
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      SSESpecification:
+        SSEEnabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: !If [IsProd, true, false]
+
+  PoliciesTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "scaler-${EnvironmentName}-policies"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: policyId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: policyId
+          KeyType: HASH
+      SSESpecification: { SSEEnabled: true }
+
+  OrdersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "scaler-${EnvironmentName}-orders"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: orderId
+          AttributeType: S
+        - AttributeName: customerId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: orderId
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: byCustomer
+          KeySchema:
+            - AttributeName: customerId
+              KeyType: HASH
+          Projection: { ProjectionType: ALL }
+      SSESpecification: { SSEEnabled: true }
+
+  AssignmentCursorTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub "scaler-${EnvironmentName}-assignment-cursor"
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: cursorId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: cursorId
+          KeyType: HASH
+
+  # ---------------------------------------------------------------------
+  # Attachments -- S3 (private, encrypted, lifecycle-limited for cost control)
+  # ---------------------------------------------------------------------
+  AttachmentsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "scaler-${EnvironmentName}-attachments-${AWS::AccountId}-${AWS::Region}"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireDemoAttachments
+            Status: Enabled
+            ExpirationInDays: 30
+      VersioningConfiguration:
+        Status: !If [IsProd, Enabled, Suspended]
+
+  # ---------------------------------------------------------------------
+  # Auth -- Cognito (SPA-friendly app client, no client secret; free tier
+  # covers well over 50 MAU which is more than enough for a demo)
+  # ---------------------------------------------------------------------
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub "scaler-${EnvironmentName}-users"
+      AutoVerifiedAttributes: [email]
+      UsernameAttributes: [email]
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 10
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+      Schema:
+        - Name: email
+          Required: true
+          Mutable: true
+
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      ClientName: !Sub "scaler-${EnvironmentName}-spa-client"
+      UserPoolId: !Ref UserPool
+      GenerateSecret: false
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      PreventUserExistenceErrors: ENABLED
+      AccessTokenValidity: 1
+      IdTokenValidity: 1
+      TokenValidityUnits: { AccessToken: hours, IdToken: hours }
+
+  # ---------------------------------------------------------------------
+  # Secrets -- API keys live in Secrets Manager, never in Lambda env vars
+  # or source. ISecretsProvider's AwsSecretsManagerProvider reads these by
+  # name at call time (see backend/src/secrets/AwsSecretsManagerProvider.ts).
+  # ---------------------------------------------------------------------
+  AnthropicApiKeySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Sub "/scaler/${EnvironmentName}/ANTHROPIC_API_KEY"
+      Description: Anthropic (Claude) API key -- fill in the actual value via the console/CLI after stack creation, never in this template.
+      GenerateSecretString:
+        SecretStringTemplate: '{"placeholder": true}'
+        GenerateStringKey: unused
+        ExcludePunctuation: true
+
+  # ---------------------------------------------------------------------
+  # Compute -- one Lambda hosts the whole Express app (tickets + auth CRUD)
+  # via serverless-http, so business logic is never duplicated between the
+  # offline server and AWS; two more Lambdas cover the event-driven /
+  # LLM-calling paths.
+  # ---------------------------------------------------------------------
+  MainApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "scaler-${EnvironmentName}-api"
+      CodeUri: ../lambda/api/
+      Handler: index.handler
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref TicketsTable }
+        - DynamoDBReadPolicy: { TableName: !Ref PoliciesTable }
+        - DynamoDBReadPolicy: { TableName: !Ref OrdersTable }
+        - DynamoDBCrudPolicy: { TableName: !Ref AssignmentCursorTable }
+        - S3CrudPolicy: { BucketName: !Ref AttachmentsBucket }
+      Events:
+        ApiProxy:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /{proxy+}
+            Method: ANY
+
+  AssignTicketFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "scaler-${EnvironmentName}-assign-ticket"
+      CodeUri: ../lambda/assignTicket/
+      Handler: index.handler
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref TicketsTable }
+        - DynamoDBCrudPolicy: { TableName: !Ref AssignmentCursorTable }
+        - Statement:
+            - Effect: Allow
+              Action: [dynamodb:DescribeStream, dynamodb:GetRecords, dynamodb:GetShardIterator, dynamodb:ListStreams]
+              Resource: !GetAtt TicketsTable.StreamArn
+      Events:
+        TicketStream:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt TicketsTable.StreamArn
+            StartingPosition: TRIM_HORIZON
+            BatchSize: 5
+            MaximumRetryAttempts: 3
+            FilterCriteria:
+              Filters:
+                - Pattern: '{"eventName": ["INSERT"]}'
+
+  SummariseCaseFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub "scaler-${EnvironmentName}-summarise-case"
+      CodeUri: ../lambda/summariseCase/
+      Handler: index.handler
+      Timeout: 30 # LLM calls can run longer than the default API-fronted functions
+      Policies:
+        - DynamoDBCrudPolicy: { TableName: !Ref TicketsTable }
+        - DynamoDBReadPolicy: { TableName: !Ref PoliciesTable }
+        - DynamoDBReadPolicy: { TableName: !Ref OrdersTable }
+        - Statement:
+            - Effect: Allow
+              Action: secretsmanager:GetSecretValue
+              Resource: !Ref AnthropicApiKeySecret
+      Events:
+        ApiRoute:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /api/cases/{ticketId}/summarise
+            Method: POST
+
+  # ---------------------------------------------------------------------
+  # API Gateway -- HTTP API (cheaper than REST API) with a Cognito JWT
+  # authorizer shared by every route except /api/auth/login.
+  # ---------------------------------------------------------------------
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      Name: !Sub "scaler-${EnvironmentName}-http-api"
+      Auth:
+        Authorizers:
+          CognitoAuthorizer:
+            JwtConfiguration:
+              issuer: !Sub "https://cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}"
+              audience: [!Ref UserPoolClient]
+            IdentitySource: "$request.header.Authorization"
+        DefaultAuthorizer: CognitoAuthorizer
+
+  ApiLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/scaler-${EnvironmentName}-api"
+      RetentionInDays: !Ref LogRetentionDays
+
+Conditions:
+  IsProd: !Equals [!Ref EnvironmentName, prod]
+
+Outputs:
+  ApiUrl:
+    Value: !Sub "https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com"
+  UserPoolId:
+    Value: !Ref UserPool
+  UserPoolClientId:
+    Value: !Ref UserPoolClient
+  AttachmentsBucketName:
+    Value: !Ref AttachmentsBucket
+  TicketsTableName:
+    Value: !Ref TicketsTable

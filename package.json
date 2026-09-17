@@ -1,0 +1,25 @@
+{
+  "name": "scaler",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Scaler FDE Project - ticketing + case-summariser platform (offline + AWS)",
+  "workspaces": [
+    "packages/*",
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=packages/shared-types && npm run build --workspace=backend && npm run build --workspace=frontend",
+    "test": "npm run test --workspace=backend",
+    "test:integration": "npm run test:integration --workspace=backend",
+    "smoke": "npm run smoke --workspace=backend",
+    "dev:backend": "npm run dev --workspace=backend",
+    "dev:frontend": "npm run dev --workspace=frontend",
+    "lint": "npm run lint --workspace=backend && npm run lint --workspace=frontend",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down -v"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

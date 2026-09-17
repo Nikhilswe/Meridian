@@ -1,0 +1,18 @@
+{
+  "rateLimit": {
+    "ticketCreateMax": 3,
+    "ticketCreateWindowMs": 5000,
+    "summariseMax": 3,
+    "summariseWindowMs": 5000
+  },
+  "pagination": {
+    "defaultLimit": 2,
+    "maxLimit": 100
+  },
+  "llm": {
+    "provider": "test-stub"
+  },
+  "assignment": {
+    "agentPoolSize": 2
+  }
+}

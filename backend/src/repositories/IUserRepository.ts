@@ -1,0 +1,11 @@
+import { User, UserRole } from "@scaler/shared-types";
+
+export interface UserWithCredentials extends User {
+  passwordHash: string;
+}
+
+export interface IUserRepository {
+  getById(userId: string): Promise<User | undefined>;
+  getByEmailWithCredentials(email: string): Promise<UserWithCredentials | undefined>;
+  listByRole(role: UserRole): Promise<User[]>;
+}

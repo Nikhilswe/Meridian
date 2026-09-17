@@ -1,0 +1,8 @@
+{
+  "llm": {
+    "provider": "anthropic"
+  },
+  "assignment": {
+    "agentPoolSize": 8
+  }
+}

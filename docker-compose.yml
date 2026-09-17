@@ -1,0 +1,54 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: scaler-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: scaler
+      POSTGRES_PASSWORD: scaler_local_pw
+      POSTGRES_DB: scaler
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U scaler -d scaler"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Optional local LLM runtime. Only used when LLM_PROVIDER=ollama.
+  ollama:
+    image: ollama/ollama:latest
+    container_name: scaler-ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollamadata:/root/.ollama
+    profiles: ["ollama"]
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: scaler-backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://scaler:scaler_local_pw@postgres:5432/scaler
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - attachments:/app/backend/.data/attachments
+
+volumes:
+  pgdata:
+  ollamadata:
+  attachments:
