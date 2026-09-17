@@ -45,6 +45,13 @@ docker-compose.yml      Offline stack: Postgres (+ optional Ollama profile)
   against a running server -- needs a real DB and a running `node
   dist/server.js`/`docker compose up`)
 - Frontend tests: `npm run test --workspace=frontend` (vitest)
+- Everything CI checks, in one go: `npm run check` (lint with zero warnings,
+  `tsc --noEmit`, then unit + integration + frontend tests under **90%
+  line/branch/function/statement coverage gates** -- `backend/jest.config.js`
+  and `frontend/vite.config.ts`). New code must keep those gates green;
+  don't lower a threshold to land a change.
+- Is the AI wired up? `npm run check:llm` (one real call via the DI container)
+- Human-facing how-to for all of the above: `docs/RUNBOOK.md`
 - DB only, without Docker: `npm run migrate --workspace=backend` then
   `npm run seed --workspace=backend`, against whatever `DATABASE_URL` is in
   your environment/`.env`
@@ -102,11 +109,22 @@ extending; don't quietly reintroduce the pattern they were written to avoid.
    non-null assertion.
 10. **No `localStorage`/`sessionStorage` in the frontend.** Auth token and
     theme are plain React context/state (see `frontend/CLAUDE.md`).
+11. **Deterministic before probabilistic in summarisation.** Anything code
+    can decide with certainty is decided in
+    `backend/src/domain/summarisationGates.ts`, never in the prompt: a
+    missing customer/order/delivery date returns `NEEDS_INFO` **before** any
+    provider (stub or real) is called, and a draft that claims resolution
+    while the record is open is `DRAFT_REJECTED` and never persisted. Order
+    retrieval is scoped by `ticket.customerId` (never `creatorId`, which is
+    the rep) and a referenced order only enters the model context if it
+    belongs to that customer. The gate runs in test mode too -- the `test`
+    bypass (rule 6) only decides *which provider answers*, not whether the
+    gate applies. Don't add a prompt instruction as a substitute for a
+    check here.
 
 ## Before you say a task is done
-Run, from repo root: `npm run build`, `npm run test --workspace=backend`,
-`npm run test:integration --workspace=backend`, `npm run test
---workspace=frontend`. For anything touching ticket creation, assignment, or
+Run, from repo root: `npm run build` and `npm run check` (lint, typecheck,
+and every test suite with the coverage gates). For anything touching ticket creation, assignment, or
 summarisation, also run the smoke test against a real running server + real
 Postgres (see `backend/CLAUDE.md` for the exact sequence) -- in this
 project's own build, that step is what caught a stale-object bug in

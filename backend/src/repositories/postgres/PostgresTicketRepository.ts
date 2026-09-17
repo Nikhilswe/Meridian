@@ -22,10 +22,18 @@ export class PostgresTicketRepository implements ITicketRepository {
       `INSERT INTO tickets
         ("ticketId", "creatorId", "assigneeId", "ticketStatus", "ticketCreationDate",
          "ticketResolvedDate", "ticketOverview", "attachedDocuments", "caseSummary",
-         "draftMessage", "version", "updatedAt")
-       VALUES ($1, $2, NULL, 'OPEN', $3, NULL, $4, $5, NULL, NULL, 1, $3)
+         "draftMessage", "customerId", "orderId", "version", "updatedAt")
+       VALUES ($1, $2, NULL, 'OPEN', $3, NULL, $4, $5, NULL, NULL, $6, $7, 1, $3)
        RETURNING *`,
-      [ticketId, input.creatorId, now, input.ticketOverview, JSON.stringify(input.attachedDocuments ?? [])],
+      [
+        ticketId,
+        input.creatorId,
+        now,
+        input.ticketOverview,
+        JSON.stringify(input.attachedDocuments ?? []),
+        input.customerId ?? null,
+        input.orderId ?? null,
+      ],
     );
     return mapTicketRow(result.rows[0]);
   }
@@ -132,6 +140,18 @@ export class PostgresTicketRepository implements ITicketRepository {
     if (fields.ticketResolvedDate !== undefined) {
       params.push(fields.ticketResolvedDate);
       setClauses.push(`"ticketResolvedDate" = $${params.length}`);
+    }
+    if (fields.customerId !== undefined) {
+      params.push(fields.customerId);
+      setClauses.push(`"customerId" = $${params.length}`);
+    }
+    if (fields.orderId !== undefined) {
+      params.push(fields.orderId);
+      setClauses.push(`"orderId" = $${params.length}`);
+    }
+    if (fields.suppliedContext !== undefined) {
+      params.push(JSON.stringify(fields.suppliedContext));
+      setClauses.push(`"suppliedContext" = $${params.length}::jsonb`);
     }
 
     params.push(ticketId, expectedVersion);

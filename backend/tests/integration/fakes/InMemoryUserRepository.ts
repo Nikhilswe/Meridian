@@ -32,4 +32,16 @@ export class InMemoryUserRepository implements IUserRepository {
       .map(({ passwordHash: _unused, ...user }) => user)
       .sort((a, b) => a.userId.localeCompare(b.userId));
   }
+
+  public async create(user: {
+    userId: string;
+    email: string;
+    displayName: string;
+    role: UserRole;
+    passwordHash: string;
+  }): Promise<User> {
+    this.usersById.set(user.userId, { ...user });
+    const { passwordHash: _unused, ...created } = user;
+    return created;
+  }
 }

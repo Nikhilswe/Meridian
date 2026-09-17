@@ -1,4 +1,4 @@
-import { AttachedDocument, Order, Policy, Ticket, TicketStatus, User, UserRole } from "@scaler/shared-types";
+import { AttachedDocument, Order, Policy, SuppliedContext, Ticket, TicketStatus, User, UserRole } from "@scaler/shared-types";
 import { UserWithCredentials } from "../IUserRepository";
 
 /**
@@ -24,6 +24,9 @@ export function mapTicketRow(row: any): Ticket {
   if (row.attachedDocuments) ticket.attachedDocuments = row.attachedDocuments as AttachedDocument[];
   if (row.caseSummary !== null && row.caseSummary !== undefined) ticket.caseSummary = row.caseSummary;
   if (row.draftMessage !== null && row.draftMessage !== undefined) ticket.draftMessage = row.draftMessage;
+  if (row.customerId) ticket.customerId = row.customerId;
+  if (row.orderId) ticket.orderId = row.orderId;
+  if (row.suppliedContext) ticket.suppliedContext = row.suppliedContext as SuppliedContext;
   return ticket;
 }
 
@@ -39,7 +42,7 @@ export function mapPolicyRow(row: any): Policy {
 }
 
 export function mapOrderRow(row: any): Order {
-  return {
+  const order: Order = {
     orderId: row.orderId,
     customerId: row.customerId,
     itemSummary: row.itemSummary,
@@ -48,6 +51,8 @@ export function mapOrderRow(row: any): Order {
     currency: row.currency,
     status: row.status,
   };
+  if (row.deliveredDate) order.deliveredDate = toIso(row.deliveredDate);
+  return order;
 }
 
 export function mapUserRow(row: any): User {

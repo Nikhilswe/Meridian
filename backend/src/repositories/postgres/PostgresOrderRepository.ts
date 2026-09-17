@@ -15,4 +15,9 @@ export class PostgresOrderRepository implements IOrderRepository {
     );
     return result.rows.map(mapOrderRow);
   }
+
+  public async getById(orderId: string): Promise<Order | undefined> {
+    const result = await this.pool.query(`SELECT * FROM orders WHERE "orderId" = $1`, [orderId]);
+    return result.rows[0] ? mapOrderRow(result.rows[0]) : undefined;
+  }
 }

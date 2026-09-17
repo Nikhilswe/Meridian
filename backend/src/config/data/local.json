@@ -10,9 +10,9 @@
     "maxLimit": 100
   },
   "llm": {
-    "provider": "anthropic"
+    "provider": "ollama"
   },
   "assignment": {
-    "agentPoolSize": 3
+    "agentPoolSize": 0
   }
 }

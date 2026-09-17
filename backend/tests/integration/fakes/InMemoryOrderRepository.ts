@@ -7,4 +7,8 @@ export class InMemoryOrderRepository implements IOrderRepository {
   public async listByCustomerId(customerId: string): Promise<Order[]> {
     return this.orders.filter((o) => o.customerId === customerId);
   }
+
+  public async getById(orderId: string): Promise<Order | undefined> {
+    return this.orders.find((o) => o.orderId === orderId);
+  }
 }

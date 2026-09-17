@@ -3,6 +3,7 @@ import { useAuth } from "./context/AuthContext";
 import { NavBar } from "./components/NavBar";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { LoginPage } from "./pages/LoginPage";
+import { SignupPage } from "./pages/SignupPage";
 import { TicketsPage } from "./pages/TicketsPage";
 import { CaseSummariserPage } from "./pages/CaseSummariserPage";
 import { CaseDetailPage } from "./pages/CaseDetailPage";
@@ -16,6 +17,7 @@ export function App() {
       <main className="app-main">
         <Routes>
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
           <Route
             path="/tickets"
             element={

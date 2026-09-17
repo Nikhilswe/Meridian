@@ -3,8 +3,9 @@ import type {
   PaginatedResponse,
   SummariseCaseResponse,
   Ticket,
+  TicketFactsInput,
 } from "@scaler/shared-types";
-import { apiGet, apiPost } from "./client";
+import { apiGet, apiPatch, apiPost } from "./client";
 
 export function listCases(params?: PaginatedRequest): Promise<PaginatedResponse<Ticket>> {
   return apiGet<PaginatedResponse<Ticket>>("/api/cases", {
@@ -19,6 +20,11 @@ export function getCase(id: string): Promise<Ticket> {
 
 export function summariseCase(id: string): Promise<SummariseCaseResponse> {
   return apiPost<SummariseCaseResponse>(`/api/cases/${encodeURIComponent(id)}/summarise`);
+}
+
+/** Adds the record-backed facts the summariser asked for (customerId / orderId). */
+export function updateCaseFacts(id: string, facts: TicketFactsInput): Promise<Ticket> {
+  return apiPatch<Ticket>(`/api/cases/${encodeURIComponent(id)}/facts`, facts);
 }
 
 export function submitDraft(id: string, draftMessage: string): Promise<Ticket> {

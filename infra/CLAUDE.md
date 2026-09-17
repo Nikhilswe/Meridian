@@ -37,6 +37,18 @@ target design. If you're asked to extend AWS-side logic:
 reimplementing routes, and is blocked only on the Dynamo repositories
 existing (see its own comment).
 
+## Alarms live in the template, not in the console
+`cfn/main.template.yaml` defines every CloudWatch alarm, the SNS
+`AlarmTopic`, the assignment DLQ, the explicit Lambda log groups (needed
+for retention AND for the log metric filters), and the dashboard. If you
+add a Lambda or a table, add its `Errors`/throttle alarm next to the
+existing ones and a row to the table in `README.md`; never create alarms
+by hand in the console where the next deploy can't see them. Log-based
+alarms match exact strings the code logs (`"Unhandled error:"` from
+`backend/src/middleware/errorHandler.ts`, `"API request failed with status"`
+from the providers) -- if you change those log lines, change the
+`FilterPattern` too.
+
 ## Region/env parameters
 `cfn/main.template.yaml` takes `EnvironmentName` (beta|prod) and
 `LlmProvider`, and uses only `AWS::Region`/`AWS::AccountId` pseudo

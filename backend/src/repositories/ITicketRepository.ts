@@ -1,4 +1,4 @@
-import { CreateTicketInput, Ticket, TicketStatus } from "@scaler/shared-types";
+import { CreateTicketInput, SuppliedContext, Ticket, TicketStatus } from "@scaler/shared-types";
 
 export interface TicketListPage {
   items: Ticket[];
@@ -12,6 +12,9 @@ export interface UpdateTicketFields {
   caseSummary?: string;
   draftMessage?: string;
   ticketResolvedDate?: string;
+  customerId?: string;
+  orderId?: string;
+  suppliedContext?: SuppliedContext;
 }
 
 /**

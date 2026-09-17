@@ -48,3 +48,12 @@ export class InvalidStateTransitionError extends Error {
     this.name = "InvalidStateTransitionError";
   }
 }
+
+export class ConflictError extends Error {
+  public readonly code = "CONFLICT";
+
+  constructor(message: string) {
+    super(message);
+    this.name = "ConflictError";
+  }
+}

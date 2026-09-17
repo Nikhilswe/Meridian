@@ -19,6 +19,15 @@ const submitDraftSchema = z.object({
   draftMessage: z.string().min(1).max(5000),
 });
 
+const updateFactsSchema = z
+  .object({
+    customerId: z.string().max(64).optional(),
+    orderId: z.string().max(64).optional(),
+  })
+  .refine((body) => body.customerId !== undefined || body.orderId !== undefined, {
+    message: "Provide at least one of customerId, orderId",
+  });
+
 /**
  * Case-summariser screen's routes: the assigned agent's queue, a single
  * case, "summarise & generate draft", and submitting the (possibly edited)
@@ -74,6 +83,30 @@ export function buildCaseRoutes(
         testMode: parsed.data.testMode,
       });
       res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  /**
+   * Adds the record-backed facts the summariser asked for (NEEDS_INFO), so
+   * the agent can supply them and retry rather than being stuck.
+   */
+  router.patch("/:id/facts", authMiddleware, async (req, res, next) => {
+    try {
+      if (!req.principal) {
+        throw new ValidationError("Missing authenticated principal");
+      }
+      const parsed = updateFactsSchema.safeParse(req.body ?? {});
+      if (!parsed.success) {
+        throw new ValidationError("Invalid facts update request", parsed.error.flatten());
+      }
+      const ticket: Ticket = await ticketService.updateFacts(
+        requireRouteParam(req.params.id, "id"),
+        req.principal,
+        parsed.data,
+      );
+      res.status(200).json(ticket);
     } catch (err) {
       next(err);
     }

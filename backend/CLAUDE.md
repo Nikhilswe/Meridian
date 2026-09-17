@@ -8,7 +8,8 @@ is backend-specific detail only.
 ```
 src/config/          ConfigResolver + config/data/{local,beta,prod,wildcard}.json
 src/secrets/         ISecretsProvider, EnvSecretsProvider, AwsSecretsManagerProvider
-src/domain/          TicketBuilder, TicketEntity (state machine + visibility rule), errors.ts
+src/domain/          TicketBuilder, TicketEntity (state machine + visibility rule), errors.ts,
+                     summarisationGates.ts (pure pre/post-model checks -- see root CLAUDE.md rule 11)
 src/repositories/    Interfaces (ITicketRepository etc.) + postgres/ + storage/ implementations
 src/events/          IEventBus, InMemoryEventBus, events.ts -- offline stand-in for a DynamoDB Stream
 src/services/        AssignmentService, TicketService, SummarisationService, naiveRetrieval.ts
@@ -25,6 +26,8 @@ tests/unit/          jest, mocked repositories, no DB
 tests/integration/   supertest + tsyringe container wired to in-memory fakes (tests/integration/fakes/),
                      no DB needed
 tests/smoke/         real HTTP against a running server -- see "Full local verification" below
+scripts/check-llm.ts one real provider call through the DI container (`npm run check:llm`)
+jest.config.js       coverage scope + the 90% thresholds `npm run test:coverage` enforces
 ```
 
 ## Full local verification (what "done" means for backend changes)
@@ -33,8 +36,8 @@ just "the tests should pass" -- run it after any change to
 tickets/assignment/summarisation/auth:
 ```bash
 npm run build --workspace=backend
-npm run test --workspace=backend
-npm run test:integration --workspace=backend
+npm run lint --workspace=backend             # zero warnings allowed
+npm run test:coverage --workspace=backend    # unit + integration, fails under 90% lines/branches
 
 # then the real thing, against a live server + live DB:
 cp .env.example .env                 # from repo root, once
@@ -75,6 +78,29 @@ add a new injectable class:
    concrete class, unless nothing will ever need to swap it.
 3. Add a matching fake + registration in `setupTestContainer.ts` if
    anything in `tests/integration/` will touch it.
+
+## Summarisation flow (SummarisationService.summariseCase)
+Fixed order, don't reorder: authorise (assignee/privileged) -> retrieve
+scoped to `ticket.customerId` -> `runPreModelGate` (NEEDS_INFO stops here,
+no provider call) -> generate (stub or provider) -> `runPostModelChecks`
+(DRAFT_REJECTED: returned for transparency, not persisted) -> persist draft
++ `suppliedContext` (facts, policy versions, checks, provider, timestamp).
+Re-running from DRAFT_PENDING_REVIEW is "regenerate": same flow, status
+unchanged, draft/context replaced. `PATCH /api/cases/:id/facts` lets the
+assignee add customerId/orderId so NEEDS_INFO is actionable.
+
+## Auth: sign-up
+`POST /api/auth/signup` -> `IAuthProvider.signup()`. Local mode creates a
+SUPPORT_AGENT (bcrypt cost 10, same as seed.ts) and returns a token exactly
+like login; duplicate email is a 409 `ConflictError`, never a 401. The route
+ignores any `role` in the body on purpose (privilege escalation); promotion
+is an admin action. AWS mode refuses -- user creation belongs to Cognito.
+
+## Assignment pool
+`assignment.agentPoolSize` caps rotation to the first N agents by
+displayName; `0` means everyone. `local.json` is `0` so a freshly signed-up
+agent gets tickets immediately. Keep the integration fixture at `2` -- the
+round-robin tests depend on it.
 
 ## LLM providers
 Default is Anthropic (`llm.provider: "anthropic"` in

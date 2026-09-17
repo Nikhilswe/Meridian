@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent, type KeyboardEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import type { AttachedDocument, DocumentType, Ticket } from "@scaler/shared-types";
 import { useAuth } from "../context/AuthContext";
 import { createTicket, listTickets } from "../api/tickets";
@@ -30,9 +31,20 @@ function toAttachedDocuments(drafts: AttachmentDraft[]): Omit<AttachedDocument, 
 
 export function TicketsPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // A ticket row opens the same detail screen the Case Summariser uses. The
+  // backend's visibility rule lets the creator OR the assignee read it; only
+  // the assignee can generate a draft (the detail page hides that control
+  // for everyone else).
+  function openTicket(ticketId: string) {
+    navigate(`/cases/${ticketId}`, { state: { from: "/tickets" } });
+  }
 
   // --- create form state ---
   const [overview, setOverview] = useState("");
+  const [customerId, setCustomerId] = useState("");
+  const [orderId, setOrderId] = useState("");
   const [attachments, setAttachments] = useState<AttachmentDraft[]>([]);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<unknown>(null);
@@ -100,9 +112,13 @@ export function TicketsPage() {
       await createTicket({
         creatorId: user.userId,
         ticketOverview: overview,
+        customerId: customerId.trim() || undefined,
+        orderId: orderId.trim() || undefined,
         attachedDocuments: toAttachedDocuments(attachments),
       });
       setOverview("");
+      setCustomerId("");
+      setOrderId("");
       setAttachments([]);
       // Reset to page 1 and refetch so the new ticket shows up.
       setCursorStack([undefined]);
@@ -118,9 +134,16 @@ export function TicketsPage() {
   return (
     <div className="page">
       <section className="card">
-        <h2>Create a ticket</h2>
+        <div className="card__header">
+          <div className="card__title">
+            <h2>Create a ticket</h2>
+            <p className="card__subtitle">
+              Capture the customer's complaint. It will be assigned to a support agent automatically.
+            </p>
+          </div>
+        </div>
         <form onSubmit={handleCreate} className="ticket-form">
-          <label className="field">
+          <label className="field field--overview">
             <span className="field__label">Ticket overview</span>
             <textarea
               required
@@ -129,7 +152,31 @@ export function TicketsPage() {
               value={overview}
               onChange={(e) => setOverview(e.target.value)}
             />
+            <span className="field__hint">Write it the way the customer told it to you -- this is what the summariser reads.</span>
           </label>
+
+          <div className="field-row">
+            <label className="field">
+              <span className="field__label">Customer ID</span>
+              <input
+                type="text"
+                placeholder="e.g. cust-1001"
+                value={customerId}
+                onChange={(e) => setCustomerId(e.target.value)}
+              />
+              <span className="field__hint">Which customer this is about. The summariser will ask for it if left blank.</span>
+            </label>
+            <label className="field">
+              <span className="field__label">Order ID <span className="muted">(optional)</span></span>
+              <input
+                type="text"
+                placeholder="e.g. order-1001"
+                value={orderId}
+                onChange={(e) => setOrderId(e.target.value)}
+              />
+              <span className="field__hint">Only supplied to the AI if it belongs to this customer.</span>
+            </label>
+          </div>
 
           <div className="attachments-editor">
             <div className="attachments-editor__header">
@@ -170,21 +217,29 @@ export function TicketsPage() {
 
           <ErrorBanner error={createError} />
 
-          <button type="submit" className="btn btn-primary" disabled={creating || !overview.trim()}>
-            {creating ? "Creating…" : "Create ticket"}
-          </button>
-          {creating && <LoadingSpinner label="Creating ticket…" />}
+          <div className="ticket-form__footer">
+            <button type="submit" className="btn btn-primary" disabled={creating || !overview.trim()}>
+              {creating ? "Creating…" : "Create ticket"}
+            </button>
+            {creating && <LoadingSpinner label="Creating ticket…" />}
+          </div>
         </form>
       </section>
 
       <section className="card">
-        <h2>Tickets</h2>
+        <div className="card__header">
+          <div className="card__title">
+            <h2>Tickets</h2>
+            <p className="card__subtitle">All tickets, newest first.</p>
+          </div>
+        </div>
         <ErrorBanner error={listError} />
         {listLoading ? (
           <LoadingSpinner label="Loading tickets…" />
         ) : (
           <>
-            <table className="data-table">
+            <div className="table-wrap">
+            <table className="data-table data-table--clickable">
               <thead>
                 <tr>
                   <th>Ticket ID</th>
@@ -197,25 +252,44 @@ export function TicketsPage() {
               <tbody>
                 {tickets.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="muted">
+                    <td colSpan={5} className="cell-empty">
                       No tickets yet.
                     </td>
                   </tr>
                 )}
                 {tickets.map((ticket) => (
-                  <tr key={ticket.ticketId}>
-                    <td>{ticket.ticketId}</td>
+                  <tr
+                    key={ticket.ticketId}
+                    tabIndex={0}
+                    role="link"
+                    aria-label={`Open ticket ${ticket.ticketId}`}
+                    onClick={() => openTicket(ticket.ticketId)}
+                    onKeyDown={(e: KeyboardEvent<HTMLTableRowElement>) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        openTicket(ticket.ticketId);
+                      }
+                    }}
+                  >
+                    <td className="cell-id">{ticket.ticketId}</td>
                     <td>
                       <StatusBadge status={ticket.ticketStatus} />
                     </td>
                     <td>{ticket.creatorId}</td>
-                    <td>{new Date(ticket.ticketCreationDate).toLocaleString()}</td>
+                    <td className="cell-date">{new Date(ticket.ticketCreationDate).toLocaleString()}</td>
                     <td>{ticket.assigneeId ?? <span className="muted">Unassigned</span>}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            <Pagination canGoPrev={pageIndex > 0} hasMore={hasMore} onPrev={handlePrev} onNext={handleNext} />
+            </div>
+            <div className="list-footer">
+              <span className="list-footer__meta">
+                Page {pageIndex + 1}
+                {tickets.length > 0 ? ` · ${tickets.length} ticket${tickets.length === 1 ? "" : "s"}` : ""}
+              </span>
+              <Pagination canGoPrev={pageIndex > 0} hasMore={hasMore} onPrev={handlePrev} onNext={handleNext} />
+            </div>
           </>
         )}
       </section>

@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ErrorBanner } from "../components/ErrorBanner";
 import { LoadingSpinner } from "../components/LoadingSpinner";
@@ -40,8 +40,28 @@ export function LoginPage() {
 
   return (
     <div className="page page-centered">
+      {/* Ambient 3D decoration -- purely visual, pointer-events:none, and
+          its drift is disabled under prefers-reduced-motion (theme.css). */}
+      <div className="login-ambient" aria-hidden="true">
+        <div className="login-ambient__glow login-ambient__glow--a" />
+        <div className="login-ambient__glow login-ambient__glow--b" />
+        <div className="login-ambient__scene">
+          <div className="login-ambient__stack">
+            <div className="login-ambient__plate" />
+            <div className="login-ambient__plate" />
+            <div className="login-ambient__plate" />
+            <div className="login-ambient__plate" />
+          </div>
+        </div>
+      </div>
+
       <form className="card auth-card" onSubmit={handleSubmit}>
+        <div className="auth-card__brand">
+          <span className="nav-bar__logo" aria-hidden="true" />
+          <span className="auth-card__brand-name">Scaler</span>
+        </div>
         <h1>Sign in to Scaler</h1>
+        <p className="auth-card__lede">Support tickets and AI case summaries, in one place.</p>
         <ErrorBanner error={error} fallbackMessage="Login failed. Check your email and password." />
 
         <label className="field">
@@ -72,6 +92,10 @@ export function LoginPage() {
           {submitting ? "Signing in…" : "Sign in"}
         </button>
         {submitting && <LoadingSpinner label="Signing in…" />}
+
+        <p className="auth-card__switch">
+          Don&apos;t have an account? <Link to="/signup">Sign up</Link>
+        </p>
       </form>
     </div>
   );

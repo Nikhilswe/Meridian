@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { ApiErrorBody } from "@scaler/shared-types";
 import {
+  ConflictError,
   ForbiddenError,
   InvalidStateTransitionError,
   NotFoundError,
@@ -35,12 +36,17 @@ export function errorHandler(err: unknown, req: Request, res: Response, next: Ne
     res.status(404).json({ error: { code: err.code, message: err.message } });
     return;
   }
-  if (err instanceof InvalidStateTransitionError) {
+  if (err instanceof InvalidStateTransitionError || err instanceof ConflictError) {
     res.status(409).json({ error: { code: err.code, message: err.message } });
     return;
   }
 
+  // Message + stack of the thrown Error only -- application code keeps
+  // these secret-free (see AnthropicProvider / EnvSecretsProvider comments).
   const message = err instanceof Error ? err.message : "Unknown error";
   console.error("Unhandled error:", message);
+  if (err instanceof Error && err.stack) {
+    console.error(err.stack);
+  }
   res.status(500).json(body);
 }

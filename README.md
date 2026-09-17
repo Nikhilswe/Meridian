@@ -18,7 +18,7 @@ frontend/            React + TypeScript (Vite) SPA
 backend/              Express + TypeScript API (SOLID, DI via tsyringe, builder pattern, etc.)
 packages/shared-types/  Types shared by frontend, backend, and the Lambda scaffold
 infra/                CloudFormation/SAM template + Lambda handler stubs (code-only, not deployed)
-docs/                 Cost notes + the ChatGPT UI-design prompt
+docs/                 RUNBOOK.md (start here), cost notes, the ChatGPT UI-design prompt
 docker-compose.yml    Offline stack: Postgres (+ optional Ollama)
 ```
 
@@ -40,16 +40,17 @@ useful for demos/CI so you never burn real API spend by accident.
 
 ## Tests
 ```bash
-npm run build --workspace=backend
-npm run test --workspace=backend            # jest unit tests
-npm run test:integration --workspace=backend # jest integration tests (in-memory adapters, no DB needed)
-npm run smoke --workspace=backend            # real HTTP smoke test against a running server
-npm run test --workspace=frontend            # vitest
+npm run check                                # lint (0 warnings) + typecheck + unit/integration/frontend tests with 90% coverage gates
+npm run smoke                                # real HTTP smoke test against a running server + Postgres (SMOKE_BASE_URL=http://localhost:4000)
+npm run check:llm                            # one real call to whichever AI provider config selects
 ```
-All of the above were run in this environment against a real local Postgres
-+ a real running server (not just "should work") -- see the session's build
-log for full pass output: 40 backend unit tests, 12 backend integration
-tests, 8/8 smoke-test scenarios, and 7 frontend tests, all passing.
+`npm run check` is exactly what CI runs on every pull request
+(`.github/workflows/ci.yml`), plus a build + smoke job against a real
+Postgres service container and `cfn-lint` on the CloudFormation template.
+Coverage thresholds (90% lines / branches / functions / statements) are
+enforced in `backend/jest.config.js` and `frontend/vite.config.ts`.
+`docs/RUNBOOK.md` walks through running, demoing and troubleshooting the
+whole thing, for developers and non-developers alike.
 
 ## What's real vs. scaffolded
 - **Offline flow (tickets + case summariser + auth + rate limiting + config +

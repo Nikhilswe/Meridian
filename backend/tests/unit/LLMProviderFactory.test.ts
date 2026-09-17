@@ -6,6 +6,7 @@ import { ConfigResolver } from "../../src/config/ConfigResolver";
 import { OpenAIProvider } from "../../src/llm/OpenAIProvider";
 import { OllamaProvider } from "../../src/llm/OllamaProvider";
 import { TestStubProvider } from "../../src/llm/TestStubProvider";
+import { AnthropicProvider } from "../../src/llm/AnthropicProvider";
 
 const FIXTURE_DIR = path.join(__dirname, "__fixtures__", "llm-provider-factory");
 
@@ -41,6 +42,18 @@ describe("LLMProviderFactory", () => {
     const config = new ConfigResolver(FIXTURE_DIR, "staging");
     const factory = new LLMProviderFactory(config);
     expect(factory.getProviderName()).toBe("test-stub");
+    expect(factory.create(container)).toBeInstanceOf(TestStubProvider);
+  });
+
+  it("resolves AnthropicProvider when llm.provider is 'anthropic'", () => {
+    const factory = new LLMProviderFactory(new ConfigResolver(`${FIXTURE_DIR}-anthropic`, "local"));
+    expect(factory.getProviderName()).toBe("anthropic");
+    expect(factory.create(container)).toBeInstanceOf(AnthropicProvider);
+  });
+
+  it("degrades to the TestStubProvider for an unrecognised provider name rather than crashing at boot", () => {
+    const factory = new LLMProviderFactory(new ConfigResolver(`${FIXTURE_DIR}-bogus`, "local"));
+    expect(factory.getProviderName()).toBe("something-unknown");
     expect(factory.create(container)).toBeInstanceOf(TestStubProvider);
   });
 });

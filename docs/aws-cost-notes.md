@@ -15,8 +15,12 @@ to work identically in any region (no hardcoded ARNs/account IDs -- only
 | Cognito User Pool | free for first 50,000 MAU | $0 |
 | Secrets Manager (1 secret) | $0.40/secret/month | ~$2.40 over 6 months |
 | CloudWatch Logs (14-day retention) | ingestion + storage | $0-3 |
+| CloudWatch alarms (15 standard + 1 composite) | $0.10/standard alarm/month, $0.50/composite alarm/month; metric filters are free | ~$12 over 6 months (the single largest fixed line item -- delete the `HttpLatencyAlarm`/`*Duration*`/`*Throttles*` alarms if you need to trim, they are early-warning rather than failure alarms) |
+| CloudWatch dashboard (1) | first 3 per account free | $0 |
+| SNS alarm topic + 1 email subscription | first 1,000 email notifications/month free | $0 |
+| SQS assignment DLQ | first 1M requests/month free | $0 (only receives messages when assignment has already failed 3 times) |
 | Data transfer | mostly intra-region | $0-2 |
-| **Total** | | **roughly $5-15 over 6 months**, leaving large headroom under $60 even accounting for LLM API costs paid separately (Anthropic/OpenAI billing is outside this AWS estimate -- keep an eye on token usage; the test-keyword bypass exists specifically so demos/tests don't burn real LLM spend by accident) |
+| **Total** | | **roughly $17-27 over 6 months**, leaving large headroom under $60 even accounting for LLM API costs paid separately (Anthropic/OpenAI billing is outside this AWS estimate -- keep an eye on token usage; the test-keyword bypass exists specifically so demos/tests don't burn real LLM spend by accident) |
 
 ## Why these choices keep it cheap
 - **PAY_PER_REQUEST DynamoDB** instead of provisioned capacity: zero cost when nobody is using the demo, which is most of the time over 6 months.

@@ -93,30 +93,48 @@ const SEED_POLICIES = [
   },
 ];
 
+/**
+ * Orders belong to CUSTOMERS (identifiers from the order system), not to
+ * support agents. cust-1002's delivered keyboard deliberately has no
+ * deliveredDate so the summariser's missing-delivery-date gate can be
+ * demonstrated (Meridian case C2) without editing the database.
+ */
 const SEED_ORDERS = [
   {
     orderId: "order-1001",
-    customerId: "agent-1",
+    customerId: "cust-1001",
     itemSummary: "Wireless headphones",
     amount: 89.99,
     currency: "USD",
     status: "DELIVERED" as const,
+    deliveredDaysAgo: 3 as number | null,
   },
   {
     orderId: "order-1002",
-    customerId: "agent-1",
+    customerId: "cust-1001",
     itemSummary: "USB-C charging cable (2-pack)",
     amount: 14.5,
     currency: "USD",
     status: "SHIPPED" as const,
+    deliveredDaysAgo: null as number | null,
   },
   {
     orderId: "order-1003",
-    customerId: "smoke-test-agent",
+    customerId: "cust-1002",
     itemSummary: "Mechanical keyboard",
     amount: 129.0,
     currency: "USD",
     status: "DELIVERED" as const,
+    deliveredDaysAgo: null as number | null, // delivered, date unknown -> gate asks for it
+  },
+  {
+    orderId: "order-2001",
+    customerId: "cust-smoke",
+    itemSummary: "Smoke-test widget",
+    amount: 10.0,
+    currency: "USD",
+    status: "DELIVERED" as const,
+    deliveredDaysAgo: 1 as number | null,
   },
 ];
 
@@ -156,15 +174,24 @@ async function seed(): Promise<void> {
   console.log("Seeding orders...");
   for (const order of SEED_ORDERS) {
     await pool.query(
-      `INSERT INTO orders ("orderId", "customerId", "itemSummary", "orderDate", "amount", "currency", "status")
-       VALUES ($1, $2, $3, now(), $4, $5, $6)
+      `INSERT INTO orders ("orderId", "customerId", "itemSummary", "orderDate", "amount", "currency", "status", "deliveredDate")
+       VALUES ($1, $2, $3, now() - interval '10 days', $4, $5, $6, $7)
        ON CONFLICT ("orderId") DO UPDATE SET
          "customerId" = EXCLUDED."customerId",
          "itemSummary" = EXCLUDED."itemSummary",
          "amount" = EXCLUDED."amount",
          "currency" = EXCLUDED."currency",
-         "status" = EXCLUDED."status"`,
-      [order.orderId, order.customerId, order.itemSummary, order.amount, order.currency, order.status],
+         "status" = EXCLUDED."status",
+         "deliveredDate" = EXCLUDED."deliveredDate"`,
+      [
+        order.orderId,
+        order.customerId,
+        order.itemSummary,
+        order.amount,
+        order.currency,
+        order.status,
+        order.deliveredDaysAgo === null ? null : new Date(Date.now() - order.deliveredDaysAgo * 86_400_000),
+      ],
     );
   }
 
