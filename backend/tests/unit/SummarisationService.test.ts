@@ -7,7 +7,7 @@ import { ILLMProvider, LLMGenerateInput } from "../../src/llm/ILLMProvider";
 import { LLMProviderFactory } from "../../src/llm/LLMProviderFactory";
 import { ConfigResolver } from "../../src/config/ConfigResolver";
 import { InvalidStateTransitionError } from "../../src/domain/errors";
-import { Order, Ticket } from "@scaler/shared-types";
+import { Order, Ticket } from "@meridian/shared-types";
 
 describe("shouldBypassWithTestStub", () => {
   it("matches the whole word 'test' case-insensitively", () => {

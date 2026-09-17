@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
 Description: >
-  Scaler support-ticketing + case-summariser platform. Region-agnostic (uses
+  Meridian support-ticketing + case-summariser platform. Region-agnostic (uses
   pseudo params AWS::Region / AWS::AccountId only -- deploy the same template
   unmodified into any region). Sized for the ~$60 / 6-month demo budget: all
   DynamoDB tables are PAY_PER_REQUEST, Lambdas are small/short-lived,
@@ -47,7 +47,7 @@ Globals:
         POLICIES_TABLE: !Ref PoliciesTable
         ORDERS_TABLE: !Ref OrdersTable
         ATTACHMENTS_BUCKET: !Ref AttachmentsBucket
-        SECRETS_PREFIX: !Sub "/scaler/${EnvironmentName}/"
+        SECRETS_PREFIX: !Sub "/meridian/${EnvironmentName}/"
 
 Resources:
   # ---------------------------------------------------------------------
@@ -57,7 +57,7 @@ Resources:
   TicketsTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub "scaler-${EnvironmentName}-tickets"
+      TableName: !Sub "meridian-${EnvironmentName}-tickets"
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: ticketId
@@ -96,7 +96,7 @@ Resources:
   PoliciesTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub "scaler-${EnvironmentName}-policies"
+      TableName: !Sub "meridian-${EnvironmentName}-policies"
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: policyId
@@ -109,7 +109,7 @@ Resources:
   OrdersTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub "scaler-${EnvironmentName}-orders"
+      TableName: !Sub "meridian-${EnvironmentName}-orders"
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: orderId
@@ -130,7 +130,7 @@ Resources:
   AssignmentCursorTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: !Sub "scaler-${EnvironmentName}-assignment-cursor"
+      TableName: !Sub "meridian-${EnvironmentName}-assignment-cursor"
       BillingMode: PAY_PER_REQUEST
       AttributeDefinitions:
         - AttributeName: cursorId
@@ -145,7 +145,7 @@ Resources:
   AttachmentsBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "scaler-${EnvironmentName}-attachments-${AWS::AccountId}-${AWS::Region}"
+      BucketName: !Sub "meridian-${EnvironmentName}-attachments-${AWS::AccountId}-${AWS::Region}"
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault: { SSEAlgorithm: AES256 }
@@ -169,7 +169,7 @@ Resources:
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
-      UserPoolName: !Sub "scaler-${EnvironmentName}-users"
+      UserPoolName: !Sub "meridian-${EnvironmentName}-users"
       AutoVerifiedAttributes: [email]
       UsernameAttributes: [email]
       Policies:
@@ -187,7 +187,7 @@ Resources:
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
-      ClientName: !Sub "scaler-${EnvironmentName}-spa-client"
+      ClientName: !Sub "meridian-${EnvironmentName}-spa-client"
       UserPoolId: !Ref UserPool
       GenerateSecret: false
       ExplicitAuthFlows:
@@ -206,7 +206,7 @@ Resources:
   AnthropicApiKeySecret:
     Type: AWS::SecretsManager::Secret
     Properties:
-      Name: !Sub "/scaler/${EnvironmentName}/ANTHROPIC_API_KEY"
+      Name: !Sub "/meridian/${EnvironmentName}/ANTHROPIC_API_KEY"
       Description: Anthropic (Claude) API key -- fill in the actual value via the console/CLI after stack creation, never in this template.
       GenerateSecretString:
         SecretStringTemplate: '{"placeholder": true}'
@@ -222,7 +222,7 @@ Resources:
   MainApiFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "scaler-${EnvironmentName}-api"
+      FunctionName: !Sub "meridian-${EnvironmentName}-api"
       CodeUri: ../lambda/api/
       Handler: index.handler
       Policies:
@@ -242,7 +242,7 @@ Resources:
   AssignTicketFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "scaler-${EnvironmentName}-assign-ticket"
+      FunctionName: !Sub "meridian-${EnvironmentName}-assign-ticket"
       CodeUri: ../lambda/assignTicket/
       Handler: index.handler
       Policies:
@@ -273,13 +273,13 @@ Resources:
   AssignTicketDlq:
     Type: AWS::SQS::Queue
     Properties:
-      QueueName: !Sub "scaler-${EnvironmentName}-assign-ticket-dlq"
+      QueueName: !Sub "meridian-${EnvironmentName}-assign-ticket-dlq"
       MessageRetentionPeriod: 1209600 # 14 days -- long enough to investigate, matches log retention
 
   SummariseCaseFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: !Sub "scaler-${EnvironmentName}-summarise-case"
+      FunctionName: !Sub "meridian-${EnvironmentName}-summarise-case"
       CodeUri: ../lambda/summariseCase/
       Handler: index.handler
       Timeout: 30 # LLM calls can run longer than the default API-fronted functions
@@ -306,7 +306,7 @@ Resources:
   HttpApi:
     Type: AWS::Serverless::HttpApi
     Properties:
-      Name: !Sub "scaler-${EnvironmentName}-http-api"
+      Name: !Sub "meridian-${EnvironmentName}-http-api"
       Auth:
         Authorizers:
           CognitoAuthorizer:
@@ -319,19 +319,19 @@ Resources:
   ApiLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/scaler-${EnvironmentName}-api"
+      LogGroupName: !Sub "/aws/lambda/meridian-${EnvironmentName}-api"
       RetentionInDays: !Ref LogRetentionDays
 
   AssignTicketLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/scaler-${EnvironmentName}-assign-ticket"
+      LogGroupName: !Sub "/aws/lambda/meridian-${EnvironmentName}-assign-ticket"
       RetentionInDays: !Ref LogRetentionDays
 
   SummariseCaseLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub "/aws/lambda/scaler-${EnvironmentName}-summarise-case"
+      LogGroupName: !Sub "/aws/lambda/meridian-${EnvironmentName}-summarise-case"
       RetentionInDays: !Ref LogRetentionDays
 
   # ---------------------------------------------------------------------
@@ -353,7 +353,7 @@ Resources:
   AlarmTopic:
     Type: AWS::SNS::Topic
     Properties:
-      TopicName: !Sub "scaler-${EnvironmentName}-alarms"
+      TopicName: !Sub "meridian-${EnvironmentName}-alarms"
 
   AlarmEmailSubscription:
     Type: AWS::SNS::Subscription
@@ -367,7 +367,7 @@ Resources:
   Http5xxAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub "scaler-${EnvironmentName}-http-5xx"
+      AlarmName: !Sub "meridian-${EnvironmentName}-http-5xx"
       AlarmDescription: One or more 5xx responses from the HTTP API in 5 minutes.
       Namespace: AWS/ApiGateway
       MetricName: 5xx
@@ -385,7 +385,7 @@ Resources:
   HttpLatencyAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub "scaler-${EnvironmentName}-http-latency-p95"
+      AlarmName: !Sub "meridian-${EnvironmentName}-http-latency-p95"
       AlarmDescription: p95 end-to-end API latency above 5s for two consecutive 5-minute periods (excludes the summarise route's expected LLM wait only by threshold; investigate if sustained).
       Namespace: AWS/ApiGateway
       MetricName: Latency
@@ -404,7 +404,7 @@ Resources:
   ApiErrorsAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub "scaler-${EnvironmentName}-api-lambda-errors"
+      AlarmName: !Sub "meridian-${EnvironmentName}-api-lambda-errors"
       AlarmDescription: The API Lambda returned an error (unhandled exception / crash) in the last 5 minutes.
       Namespace: AWS/Lambda
       MetricName: Errors
@@ -422,7 +422,7 @@ Resources:
   ApiThrottlesAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub "scaler-${EnvironmentName}-api-lambda-throttles"
+      AlarmName: !Sub "meridian-${EnvironmentName}-api-lambda-throttles"
       AlarmDescription: The API Lambda was throttled (account concurrency exhausted) in the last 5 minutes.
       Namespace: AWS/Lambda
       MetricName: Throttles
@@ -439,7 +439,7 @@ Resources:
   ApiDurationAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub "scaler-${EnvironmentName}-api-lambda-duration-p95"
+      AlarmName: !Sub "meridian-${EnvironmentName}-api-lambda-duration-p95"
       AlarmDescription: API Lambda p95 duration above 12s (80% of its 15s timeout) -- requests are about to start timing out.
       Namespace: AWS/Lambda
       MetricName: Duration
@@ -464,7 +464,7 @@ Resources:
       LogGroupName: !Ref ApiLogGroup
       FilterPattern: '"Unhandled error:"'
       MetricTransformations:
-        - MetricNamespace: !Sub "Scaler/${EnvironmentName}"
+        - MetricNamespace: !Sub "Meridian/${EnvironmentName}"
           MetricName: ApiUnhandledErrors
           MetricValue: "1"
           DefaultValue: 0
@@ -473,9 +473,9 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     DependsOn: ApiUnhandledErrorMetricFilter
     Properties:
-      AlarmName: !Sub "scaler-${EnvironmentName}-api-500s"
+      AlarmName: !Sub "meridian-${EnvironmentName}-api-500s"
       AlarmDescription: The Express app returned one or more 500 Internal Server Error responses in 5 minutes (see "Unhandled error:" lines in the API log group).
-      Namespace: !Sub "Scaler/${EnvironmentName}"
+      Namespace: !Sub "Meridian/${EnvironmentName}"
       MetricName: ApiUnhandledErrors
       Statistic: Sum
       Period: 300
@@ -490,7 +490,7 @@ Resources:
   SummariseCaseErrorsAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub "scaler-${EnvironmentName}-summarise-errors"
+      AlarmName: !Sub "meridian-${EnvironmentName}-summarise-errors"
       AlarmDescription: The summarise-case Lambda failed in the last 5 minutes -- agents cannot get AI drafts; switch them to the manual process (see runbook).
       Namespace: AWS/Lambda
       MetricName: Errors
@@ -508,7 +508,7 @@ Resources:
   SummariseCaseThrottlesAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub "scaler-${EnvironmentName}-summarise-throttles"
+      AlarmName: !Sub "meridian-${EnvironmentName}-summarise-throttles"
       AlarmDescription: The summarise-case Lambda was throttled in the last 5 minutes.
       Namespace: AWS/Lambda
       MetricName: Throttles
@@ -525,7 +525,7 @@ Resources:
   SummariseCaseDurationAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub "scaler-${EnvironmentName}-summarise-duration-p95"
+      AlarmName: !Sub "meridian-${EnvironmentName}-summarise-duration-p95"
       AlarmDescription: Summarise-case p95 duration above 24s (80% of its 30s timeout) -- the LLM provider is slow; drafts are about to start timing out.
       Namespace: AWS/Lambda
       MetricName: Duration
@@ -548,7 +548,7 @@ Resources:
       LogGroupName: !Ref SummariseCaseLogGroup
       FilterPattern: '"API request failed with status"'
       MetricTransformations:
-        - MetricNamespace: !Sub "Scaler/${EnvironmentName}"
+        - MetricNamespace: !Sub "Meridian/${EnvironmentName}"
           MetricName: LlmProviderFailures
           MetricValue: "1"
           DefaultValue: 0
@@ -557,9 +557,9 @@ Resources:
     Type: AWS::CloudWatch::Alarm
     DependsOn: SummariseProviderFailureMetricFilter
     Properties:
-      AlarmName: !Sub "scaler-${EnvironmentName}-llm-provider-failures"
+      AlarmName: !Sub "meridian-${EnvironmentName}-llm-provider-failures"
       AlarmDescription: The LLM provider returned a non-2xx status 3+ times in 5 minutes (bad key, quota exhausted, or provider outage). Check the secret and the provider status page before anything else.
-      Namespace: !Sub "Scaler/${EnvironmentName}"
+      Namespace: !Sub "Meridian/${EnvironmentName}"
       MetricName: LlmProviderFailures
       Statistic: Sum
       Period: 300
@@ -574,7 +574,7 @@ Resources:
   AssignTicketErrorsAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub "scaler-${EnvironmentName}-assign-errors"
+      AlarmName: !Sub "meridian-${EnvironmentName}-assign-errors"
       AlarmDescription: The assign-ticket stream Lambda failed in the last 5 minutes -- new tickets may be stuck in OPEN.
       Namespace: AWS/Lambda
       MetricName: Errors
@@ -592,7 +592,7 @@ Resources:
   AssignTicketIteratorAgeAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub "scaler-${EnvironmentName}-assign-stream-lag"
+      AlarmName: !Sub "meridian-${EnvironmentName}-assign-stream-lag"
       AlarmDescription: The assign-ticket Lambda is more than 60s behind the tickets stream for two periods -- assignment is lagging or stuck on a poison record.
       Namespace: AWS/Lambda
       MetricName: IteratorAge
@@ -610,7 +610,7 @@ Resources:
   AssignTicketDlqAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub "scaler-${EnvironmentName}-assign-dlq-not-empty"
+      AlarmName: !Sub "meridian-${EnvironmentName}-assign-dlq-not-empty"
       AlarmDescription: A ticket-created event exhausted its retries and landed in the assignment DLQ. The ticket exists but is unassigned; assign it manually and redrive after fixing the cause.
       Namespace: AWS/SQS
       MetricName: ApproximateNumberOfMessagesVisible
@@ -629,7 +629,7 @@ Resources:
   TicketsReadThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub "scaler-${EnvironmentName}-tickets-read-throttle"
+      AlarmName: !Sub "meridian-${EnvironmentName}-tickets-read-throttle"
       AlarmDescription: DynamoDB throttled reads on the tickets table in the last 5 minutes.
       Namespace: AWS/DynamoDB
       MetricName: ReadThrottleEvents
@@ -647,7 +647,7 @@ Resources:
   TicketsWriteThrottleAlarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      AlarmName: !Sub "scaler-${EnvironmentName}-tickets-write-throttle"
+      AlarmName: !Sub "meridian-${EnvironmentName}-tickets-write-throttle"
       AlarmDescription: DynamoDB throttled writes on the tickets table in the last 5 minutes -- ticket creation/assignment/draft saves may be failing.
       Namespace: AWS/DynamoDB
       MetricName: WriteThrottleEvents
@@ -666,7 +666,7 @@ Resources:
   BackendHealthCompositeAlarm:
     Type: AWS::CloudWatch::CompositeAlarm
     Properties:
-      AlarmName: !Sub "scaler-${EnvironmentName}-backend-unhealthy"
+      AlarmName: !Sub "meridian-${EnvironmentName}-backend-unhealthy"
       AlarmDescription: Fires when any customer-facing failure alarm is in ALARM. Subscribe pagers here; the individual alarms tell you where to look.
       AlarmRule: !Sub >-
         ALARM("${Http5xxAlarm}") OR ALARM("${ApiErrorsAlarm}") OR ALARM("${ApiUnhandledErrorsAlarm}")
@@ -680,7 +680,7 @@ Resources:
   BackendDashboard:
     Type: AWS::CloudWatch::Dashboard
     Properties:
-      DashboardName: !Sub "scaler-${EnvironmentName}-backend"
+      DashboardName: !Sub "meridian-${EnvironmentName}-backend"
       DashboardBody: !Sub |
         {
           "widgets": [
@@ -714,7 +714,7 @@ Resources:
             { "type": "metric", "x": 0, "y": 15, "width": 12, "height": 6,
               "properties": { "title": "LLM provider failures / API 500s (from logs)", "region": "${AWS::Region}", "stat": "Sum", "period": 300,
                 "metrics": [
-                  [ "Scaler/${EnvironmentName}", "LlmProviderFailures" ],
+                  [ "Meridian/${EnvironmentName}", "LlmProviderFailures" ],
                   [ ".", "ApiUnhandledErrors" ] ] } },
             { "type": "metric", "x": 12, "y": 15, "width": 12, "height": 6,
               "properties": { "title": "Assignment: stream lag (ms) and DLQ depth", "region": "${AWS::Region}", "period": 300,
@@ -743,6 +743,6 @@ Outputs:
     Description: Subscribe pagers/chat integrations here; every backend alarm publishes to it.
     Value: !Ref AlarmTopic
   BackendDashboardUrl:
-    Value: !Sub "https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#dashboards:name=scaler-${EnvironmentName}-backend"
+    Value: !Sub "https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#dashboards:name=meridian-${EnvironmentName}-backend"
   AssignTicketDlqUrl:
     Value: !Ref AssignTicketDlq

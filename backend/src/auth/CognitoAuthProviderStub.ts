@@ -1,6 +1,6 @@
 import { CognitoJwtVerifier } from "aws-jwt-verify";
 import { injectable } from "tsyringe";
-import { AuthenticatedPrincipal, User, UserRole } from "@scaler/shared-types";
+import { AuthenticatedPrincipal, User, UserRole } from "@meridian/shared-types";
 import { UnauthorizedError } from "../domain/errors";
 import { IAuthProvider } from "./IAuthProvider";
 

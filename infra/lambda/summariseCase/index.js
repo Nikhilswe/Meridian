@@ -21,7 +21,7 @@ const secretsClient = new SecretsManagerClient({});
 
 const TICKETS_TABLE = process.env.TICKETS_TABLE;
 const POLICIES_TABLE = process.env.POLICIES_TABLE;
-const SECRETS_PREFIX = process.env.SECRETS_PREFIX || "/scaler/beta/";
+const SECRETS_PREFIX = process.env.SECRETS_PREFIX || "/meridian/beta/";
 
 function shouldBypassWithTestStub(ticketOverview) {
   return /\btest\b/i.test(ticketOverview || "");

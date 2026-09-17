@@ -1,8 +1,8 @@
-# Scaler backend
+# Meridian backend
 
 REST API for the support-ticketing + case-summariser platform. Express +
 TypeScript, constructor-based DI via `tsyringe`, Postgres for persistence
-offline (mirrors a DynamoDB-backed AWS deployment 1:1 via `@scaler/shared-types`).
+offline (mirrors a DynamoDB-backed AWS deployment 1:1 via `@meridian/shared-types`).
 
 ## Setup
 
@@ -54,7 +54,7 @@ Against a **running** server (local `npm run dev`, or a deployed instance):
 SMOKE_BASE_URL=http://localhost:4000 npm run smoke --workspace=backend
 ```
 
-Logs in as the seeded `smoke-test@scaler.local` user and runs a sequence of
+Logs in as the seeded `smoke-test@meridian.local` user and runs a sequence of
 realistic scenarios end to end (create tickets, paginate, list cases,
 summarise, edit + submit a draft, confirm resolution, confirm rate
 limiting), printing PASS/FAIL per scenario and exiting non-zero on any

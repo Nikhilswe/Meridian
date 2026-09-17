@@ -1,8 +1,8 @@
 {
-  "name": "scaler",
+  "name": "meridian",
   "private": true,
   "version": "0.1.0",
-  "description": "Scaler FDE Project - ticketing + case-summariser platform (offline + AWS)",
+  "description": "Meridian FDE Project - ticketing + case-summariser platform (offline + AWS)",
   "workspaces": [
     "packages/*",
     "backend",

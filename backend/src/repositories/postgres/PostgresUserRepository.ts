@@ -1,6 +1,6 @@
 import { Pool } from "pg";
 import { inject, injectable } from "tsyringe";
-import { User, UserRole } from "@scaler/shared-types";
+import { User, UserRole } from "@meridian/shared-types";
 import { IUserRepository, UserWithCredentials } from "../IUserRepository";
 import { mapUserRow, mapUserWithCredentialsRow } from "./rowMappers";
 

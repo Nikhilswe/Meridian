@@ -1,4 +1,4 @@
-import { User, UserRole } from "@scaler/shared-types";
+import { User, UserRole } from "@meridian/shared-types";
 
 export interface UserWithCredentials extends User {
   passwordHash: string;

@@ -28,7 +28,7 @@ src/styles/theme.css   CSS custom properties for [data-theme="light"|"dark"] -- 
    `ThemeContext`, consumed by CSS custom properties in
    `src/styles/theme.css`. Don't introduce a second theming mechanism
    (e.g. Tailwind's `dark:` class strategy) without updating both.
-3. **Types come from `@scaler/shared-types` as `import type {...}`** (type-only
+3. **Types come from `@meridian/shared-types` as `import type {...}`** (type-only
    imports), matching `packages/shared-types/src/*.ts` exactly. If the
    backend adds a field/endpoint, check whether a shared type needs
    updating there FIRST (see repo-root CLAUDE.md) rather than

@@ -1,8 +1,8 @@
 {
-  "name": "@scaler/backend",
+  "name": "@meridian/backend",
   "version": "0.1.0",
   "private": true,
-  "description": "Scaler backend: ticketing REST API + case-summariser flow",
+  "description": "Meridian backend: ticketing REST API + case-summariser flow",
   "main": "dist/server.js",
   "scripts": {
     "build": "tsc -b && mkdir -p dist/config/data dist/db/migrations && cp -r src/config/data/. dist/config/data/ && cp -r src/db/migrations/. dist/db/migrations/",
@@ -22,7 +22,7 @@
     "@anthropic-ai/sdk": "^0.126.0",
     "@aws-sdk/client-s3": "^3.658.0",
     "@aws-sdk/client-secrets-manager": "^3.658.0",
-    "@scaler/shared-types": "0.1.0",
+    "@meridian/shared-types": "0.1.0",
     "aws-jwt-verify": "^4.0.1",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",

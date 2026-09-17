@@ -1,4 +1,4 @@
-# Prompt for ChatGPT: visual redesign of the Scaler UI
+# Prompt for ChatGPT: visual redesign of the Meridian UI
 
 Copy everything in the code block below into ChatGPT (a model with image
 generation / canvas / code-interpreter access will get the most out of it,
@@ -9,11 +9,11 @@ without needing to redo the app's logic -- only its visuals.
 ```
 You are a senior product designer + frontend engineer. Redesign the visual
 design (not the logic or data flow) of an internal enterprise support tool
-called "Scaler". Keep every screen, form field, button, and state described
+called "Meridian". Keep every screen, form field, button, and state described
 below -- I need a restyle, not a redesign of functionality.
 
 APP OVERVIEW
-Scaler is a support-ticket + AI case-summariser tool used by support agents
+Meridian is a support-ticket + AI case-summariser tool used by support agents
 and reviewers. It is React + TypeScript. There are two main tabs behind a
 login screen, plus a persistent dark/light mode toggle in the top nav.
 

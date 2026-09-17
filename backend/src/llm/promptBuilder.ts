@@ -1,4 +1,4 @@
-import { Order } from "@scaler/shared-types";
+import { Order } from "@meridian/shared-types";
 import { LLMGenerateInput } from "./ILLMProvider";
 
 /**
@@ -13,7 +13,7 @@ import { LLMGenerateInput } from "./ILLMProvider";
  */
 
 export const SYSTEM_PROMPT =
-  "You are a support-ticket case summariser for Scaler. You draft replies for a human support " +
+  "You are a support-ticket case summariser for Meridian. You draft replies for a human support " +
   "agent to review; you cannot approve refunds, send messages, or change records. Given a " +
   "customer's ticket overview, a set of SUPPLIED FACTS taken from the company's authoritative " +
   "records, and a short list of relevant company policies, produce two things: (1) a concise " +

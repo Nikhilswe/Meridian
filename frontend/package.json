@@ -1,5 +1,5 @@
 {
-  "name": "@scaler/frontend",
+  "name": "@meridian/frontend",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -13,7 +13,7 @@
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
-    "@scaler/shared-types": "0.1.0",
+    "@meridian/shared-types": "0.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.2"

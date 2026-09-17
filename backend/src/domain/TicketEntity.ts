@@ -1,4 +1,4 @@
-import { Ticket, TicketStatus } from "@scaler/shared-types";
+import { Ticket, TicketStatus } from "@meridian/shared-types";
 
 /**
  * Pure, dependency-free domain rules about a Ticket's lifecycle. Kept free of

@@ -1,4 +1,4 @@
-import { AuthenticatedPrincipal, User, UserRole } from "@scaler/shared-types";
+import { AuthenticatedPrincipal, User, UserRole } from "@meridian/shared-types";
 
 /**
  * Auth seam. Offline: LocalJwtAuthProvider (bcrypt + signed JWT). AWS mode:

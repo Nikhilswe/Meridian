@@ -1,4 +1,4 @@
-import type { ApiErrorBody } from "@scaler/shared-types";
+import type { ApiErrorBody } from "@meridian/shared-types";
 
 /**
  * Small typed fetch wrapper shared by every src/api/*.ts module.

@@ -1,4 +1,4 @@
-import { CreateTicketInput, SuppliedContext, Ticket, TicketStatus } from "@scaler/shared-types";
+import { CreateTicketInput, SuppliedContext, Ticket, TicketStatus } from "@meridian/shared-types";
 
 export interface TicketListPage {
   items: Ticket[];

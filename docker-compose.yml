@@ -3,18 +3,18 @@ version: "3.9"
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: scaler-postgres
+    container_name: meridian-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: scaler
-      POSTGRES_PASSWORD: scaler_local_pw
-      POSTGRES_DB: scaler
+      POSTGRES_USER: meridian
+      POSTGRES_PASSWORD: meridian_local_pw
+      POSTGRES_DB: meridian
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U scaler -d scaler"]
+      test: ["CMD-SHELL", "pg_isready -U meridian -d meridian"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -22,7 +22,7 @@ services:
   # Optional local LLM runtime. Only used when LLM_PROVIDER=ollama.
   ollama:
     image: ollama/ollama:latest
-    container_name: scaler-ollama
+    container_name: meridian-ollama
     restart: unless-stopped
     ports:
       - "11434:11434"
@@ -34,12 +34,12 @@ services:
     build:
       context: .
       dockerfile: backend/Dockerfile
-    container_name: scaler-backend
+    container_name: meridian-backend
     restart: unless-stopped
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql://scaler:scaler_local_pw@postgres:5432/scaler
+      DATABASE_URL: postgresql://meridian:meridian_local_pw@postgres:5432/meridian
     ports:
       - "4000:4000"
     depends_on:

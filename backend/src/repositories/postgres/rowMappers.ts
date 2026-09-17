@@ -1,4 +1,4 @@
-import { AttachedDocument, Order, Policy, SuppliedContext, Ticket, TicketStatus, User, UserRole } from "@scaler/shared-types";
+import { AttachedDocument, Order, Policy, SuppliedContext, Ticket, TicketStatus, User, UserRole } from "@meridian/shared-types";
 import { UserWithCredentials } from "../IUserRepository";
 
 /**

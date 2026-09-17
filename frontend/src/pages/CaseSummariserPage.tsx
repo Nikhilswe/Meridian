@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import type { Ticket } from "@scaler/shared-types";
+import type { Ticket } from "@meridian/shared-types";
 import { listCases } from "../api/cases";
 import { StatusBadge } from "../components/StatusBadge";
 import { Pagination } from "../components/Pagination";

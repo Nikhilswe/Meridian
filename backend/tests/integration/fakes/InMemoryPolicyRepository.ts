@@ -1,4 +1,4 @@
-import { Policy } from "@scaler/shared-types";
+import { Policy } from "@meridian/shared-types";
 import { IPolicyRepository } from "../../../src/repositories/IPolicyRepository";
 
 export class InMemoryPolicyRepository implements IPolicyRepository {

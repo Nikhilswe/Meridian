@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { PaginatedResponse, SummariseCaseResponse, Ticket } from "@scaler/shared-types";
+import { PaginatedResponse, SummariseCaseResponse, Ticket } from "@meridian/shared-types";
 import { TicketService } from "../services/TicketService";
 import { SummarisationService } from "../services/SummarisationService";
 import { ConfigResolver } from "../config/ConfigResolver";

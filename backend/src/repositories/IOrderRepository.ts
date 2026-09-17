@@ -1,4 +1,4 @@
-import { Order } from "@scaler/shared-types";
+import { Order } from "@meridian/shared-types";
 
 export interface IOrderRepository {
   listByCustomerId(customerId: string): Promise<Order[]>;
