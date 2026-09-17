@@ -43,6 +43,7 @@ function assert(condition: unknown, message: string): asserts condition {
 async function api(
   path: string,
   options: { method?: string; token?: string; body?: unknown } = {},
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- smoke assertions poke at arbitrary JSON
 ): Promise<{ status: number; body: any }> {
   const response = await fetch(`${BASE_URL}${path}`, {
     method: options.method || "GET",
@@ -63,7 +64,7 @@ async function api(
 
 async function main(): Promise<void> {
   let token = "";
-  let createdTicketIds: string[] = [];
+  const createdTicketIds: string[] = [];
   let testModeTicketId = "";
   let caseToResolveId = "";
 
@@ -77,26 +78,42 @@ async function main(): Promise<void> {
     token = body.token;
   });
 
-  await runScenario("create several tickets, including one with the word 'test'", async () => {
-    const overviews = [
-      "Customer says their order never arrived",
-      "This is a test ticket to exercise the bypass path",
-      "Customer wants to know about the refund policy",
-    ];
-    for (const overview of overviews) {
+  await runScenario("create tickets (with the word 'test') until round-robin assigns one to the smoke agent", async () => {
+    // Every ticket carries the bypass keyword so whichever one lands on us is
+    // safe to summarise without an API key. Round-robin walks the whole
+    // SUPPORT_AGENT list (local config: agentPoolSize 0 = everyone), so the
+    // number of creations needed equals the number of agents in the DB.
+    // Bounded well under rateLimit.ticketCreateMax (10) so the later 429
+    // scenario still has headroom.
+    const MAX_ATTEMPTS = 6;
+    const seenAssignees = new Set<string>();
+    for (let i = 0; i < MAX_ATTEMPTS && !testModeTicketId; i += 1) {
       const { status, body } = await api("/api/tickets", {
         method: "POST",
         token,
-        body: { creatorId: "smoke-customer", ticketOverview: overview },
+        // cust-smoke / order-2001 are seeded (backend/src/db/seed.ts) so the
+        // summariser's deterministic gate has real facts to check.
+        body: {
+          creatorId: "smoke-customer",
+          customerId: "cust-smoke",
+          orderId: "order-2001",
+          ticketOverview: `Smoke test ${i + 1}: customer says their order never arrived`,
+        },
       });
       assert(status === 201, `expected 201 creating ticket, got ${status}: ${JSON.stringify(body)}`);
+      assert(body.ticketStatus === "ASSIGNED" && body.assigneeId, "ticket was not auto-assigned by the TicketCreated handler");
       createdTicketIds.push(body.ticketId);
-      if (overview.toLowerCase().includes("test")) {
+      seenAssignees.add(body.assigneeId);
+      if (body.assigneeId === "smoke-test-agent") {
         testModeTicketId = body.ticketId;
       }
     }
-    assert(createdTicketIds.length === 3, "expected 3 tickets to be created");
-    assert(testModeTicketId, "expected one created ticket to contain the word 'test'");
+    assert(
+      testModeTicketId,
+      `none of ${MAX_ATTEMPTS} tickets were assigned to smoke-test-agent (saw: ${[...seenAssignees].join(", ")}). ` +
+        "Either more than 6 SUPPORT_AGENT users exist in this database, or assignment.agentPoolSize in " +
+        "backend/src/config/data/local.json is capped below the position of 'Smoke Test Agent' -- set it to 0.",
+    );
   });
 
   await runScenario("list tickets with pagination across pages", async () => {
@@ -129,13 +146,42 @@ async function main(): Promise<void> {
   await runScenario("summarise a case (test-stub / bypass path)", async () => {
     const ticketId = testModeTicketId || caseToResolveId || createdTicketIds[0];
     assert(ticketId, "need at least one ticket to summarise");
-    const { status, body } = await api(`/api/cases/${ticketId}/summarise`, { method: "POST", token, body: {} });
+    // The 'test' keyword ticket exercises the overview bypass; any other
+    // ticket uses the explicit testMode flag so the smoke run never spends
+    // real API credit.
+    const { status, body } = await api(`/api/cases/${ticketId}/summarise`, {
+      method: "POST",
+      token,
+      body: ticketId === testModeTicketId ? {} : { testMode: true },
+    });
     assert(status === 200, `expected 200, got ${status}: ${JSON.stringify(body)}`);
+    assert(body.outcome === "DRAFTED", `expected outcome DRAFTED, got ${body.outcome}: ${JSON.stringify(body)}`);
+    assert(Array.isArray(body.checks) && body.checks.every((c: { passed: boolean }) => c.passed), "expected every check to pass");
+    assert(body.suppliedFacts?.order?.orderId === "order-2001", "expected the seeded order to be supplied as a fact");
     if (ticketId === testModeTicketId) {
       assert(body.testModeTriggered === true, "expected testModeTriggered=true for the 'test' overview ticket");
       assert(body.caseSummary === "test" && body.draftMessage === "test", "expected deterministic test values");
     }
     caseToResolveId = ticketId;
+  });
+
+  await runScenario("deterministic gate: a ticket with no customer gets NEEDS_INFO and no draft", async () => {
+    const created = await api("/api/tickets", {
+      method: "POST",
+      token,
+      body: { creatorId: "smoke-customer", ticketOverview: "Gate probe -- test" },
+    });
+    assert(created.status === 201, `expected 201, got ${created.status}: ${JSON.stringify(created.body)}`);
+    // Only the assignee may summarise; skip gracefully if round-robin gave it to someone else.
+    if (created.body.assigneeId !== "smoke-test-agent") {
+      return;
+    }
+    const { status, body } = await api(`/api/cases/${created.body.ticketId}/summarise`, { method: "POST", token, body: {} });
+    assert(status === 200, `expected 200, got ${status}: ${JSON.stringify(body)}`);
+    assert(body.outcome === "NEEDS_INFO", `expected NEEDS_INFO, got ${body.outcome}`);
+    assert(body.caseSummary === undefined, "no draft must be produced when the gate fails");
+    const after = await api(`/api/tickets/${created.body.ticketId}`, { token });
+    assert(after.body.ticketStatus === "ASSIGNED", `expected status unchanged (ASSIGNED), got ${after.body.ticketStatus}`);
   });
 
   await runScenario("edit and submit the draft, resolving the ticket", async () => {

@@ -24,6 +24,8 @@ export class InMemoryTicketRepository implements ITicketRepository {
       ticketCreationDate: new Date(now.getTime() + offsetMs).toISOString(),
       ticketOverview: input.ticketOverview,
       attachedDocuments: input.attachedDocuments?.map((doc) => ({ ...doc, uploadedAt: now.toISOString() })),
+      ...(input.customerId ? { customerId: input.customerId } : {}),
+      ...(input.orderId ? { orderId: input.orderId } : {}),
       version: 1,
       updatedAt: now.toISOString(),
     };

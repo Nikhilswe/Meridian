@@ -20,6 +20,8 @@ const attachedDocumentSchema = z.object({
 const createTicketSchema = z.object({
   creatorId: z.string().min(1),
   ticketOverview: z.string().min(1).max(5000),
+  customerId: z.string().max(64).optional(),
+  orderId: z.string().max(64).optional(),
   attachedDocuments: z.array(attachedDocumentSchema).optional(),
 });
 

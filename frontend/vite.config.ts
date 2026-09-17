@@ -14,5 +14,15 @@ export default defineConfig({
     globals: true,
     setupFiles: ["./src/setupTests.ts"],
     css: true,
+    coverage: {
+      provider: "v8",
+      reporter: ["text-summary", "text", "lcov"],
+      // Everything a user can reach. Excluded: the DOM bootstrap (main.tsx),
+      // test helpers, and type-only files.
+      include: ["src/**/*.{ts,tsx}"],
+      exclude: ["src/main.tsx", "src/setupTests.ts", "src/test/**", "src/**/__tests__/**", "src/vite-env.d.ts"],
+      // `npm run test:coverage` fails below this bar; CI enforces it.
+      thresholds: { lines: 90, branches: 90, functions: 90, statements: 90 },
+    },
   },
 });

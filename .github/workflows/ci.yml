@@ -1,0 +1,142 @@
+name: CI
+
+# Runs on every push to main and every pull request. Four independent jobs
+# so a lint failure and a test failure are reported separately in the PR:
+#   lint        -- ESLint (--max-warnings 0) for backend + frontend
+#   typecheck   -- tsc --noEmit for every workspace
+#   test        -- unit + integration with coverage; fails under 90% lines /
+#                  branches / functions / statements (jest + vitest thresholds)
+#   build       -- full production build, then the smoke test against a real
+#                  Postgres service container with the deterministic test-stub
+#                  provider (no API keys, no Ollama needed in CI)
+#   infra       -- cfn-lint on the CloudFormation template
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: 22
+
+jobs:
+  lint:
+    name: Lint (ESLint, zero warnings)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build --workspace=packages/shared-types
+      - run: npm run lint
+
+  typecheck:
+    name: Typecheck (tsc --noEmit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+
+  test:
+    name: Tests + coverage (>= 90% lines & branches)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build --workspace=packages/shared-types
+      - name: Backend unit + integration (jest, coverageThreshold in jest.config.js)
+        run: npm run test:coverage --workspace=backend
+      - name: Frontend (vitest, coverage.thresholds in vite.config.ts)
+        run: npm run test:coverage --workspace=frontend
+      - name: Upload coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: |
+            backend/coverage/lcov.info
+            frontend/coverage/lcov.info
+          retention-days: 14
+
+  build-and-smoke:
+    name: Build + smoke test (real Postgres, test-stub LLM)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: scaler
+          POSTGRES_PASSWORD: scaler_local_pw
+          POSTGRES_DB: scaler
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U scaler"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      APP_ENV: local
+      DATABASE_URL: postgresql://scaler:scaler_local_pw@localhost:5432/scaler
+      JWT_SECRET: ci-only-signing-secret
+      JWT_EXPIRY: 1h
+      SMOKE_BASE_URL: http://localhost:4000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Point the local config layer at the deterministic test-stub provider
+        # The committed local.json selects ollama for developer machines. CI
+        # has no Ollama and must never spend real API credits, so swap the
+        # config VALUE (never an env var -- see CLAUDE.md rule 5).
+        run: |
+          node -e '
+            const fs = require("fs");
+            const p = "backend/dist/config/data/local.json";
+            const cfg = JSON.parse(fs.readFileSync(p, "utf8"));
+            cfg.llm.provider = "test-stub";
+            fs.writeFileSync(p, JSON.stringify(cfg, null, 2));
+          '
+      - run: npm run migrate --workspace=backend
+      - run: npm run seed --workspace=backend
+      - name: Start the API
+        run: |
+          node backend/dist/server.js > server.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:4000/health && break
+            sleep 1
+          done
+      - run: npm run smoke --workspace=backend
+      - name: Server log
+        if: always()
+        run: cat server.log
+
+  infra:
+    name: CloudFormation lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install cfn-lint
+      - run: cfn-lint infra/cfn/main.template.yaml

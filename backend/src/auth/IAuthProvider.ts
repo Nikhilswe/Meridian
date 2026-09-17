@@ -1,4 +1,4 @@
-import { AuthenticatedPrincipal, User } from "@scaler/shared-types";
+import { AuthenticatedPrincipal, User, UserRole } from "@scaler/shared-types";
 
 /**
  * Auth seam. Offline: LocalJwtAuthProvider (bcrypt + signed JWT). AWS mode:
@@ -7,5 +7,7 @@ import { AuthenticatedPrincipal, User } from "@scaler/shared-types";
  */
 export interface IAuthProvider {
   login(email: string, password: string): Promise<{ token: string; user: User }>;
+  /** Self-service registration; resolves exactly like a successful login. */
+  signup(email: string, password: string, displayName: string, role?: UserRole): Promise<{ token: string; user: User }>;
   verify(token: string): Promise<AuthenticatedPrincipal>;
 }

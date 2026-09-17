@@ -1,11 +1,18 @@
 import { inject, injectable } from "tsyringe";
-import { AuthenticatedPrincipal, CreateTicketInput, PaginatedResponse, SubmitDraftInput, Ticket } from "@scaler/shared-types";
-import { ITicketRepository } from "../repositories/ITicketRepository";
+import {
+  AuthenticatedPrincipal,
+  CreateTicketInput,
+  PaginatedResponse,
+  SubmitDraftInput,
+  Ticket,
+  TicketFactsInput,
+} from "@scaler/shared-types";
+import { ITicketRepository, UpdateTicketFields } from "../repositories/ITicketRepository";
 import { IEventBus } from "../events/IEventBus";
 import { EVENT_TYPE_TICKET_CREATED, TicketCreatedEvent } from "../events/events";
-import { TicketBuilder } from "../domain/TicketBuilder";
+import { TicketBuilder, validateOptionalIdentifier } from "../domain/TicketBuilder";
 import { canTransition, isVisibleToUser } from "../domain/TicketEntity";
-import { ForbiddenError, InvalidStateTransitionError, NotFoundError } from "../domain/errors";
+import { ForbiddenError, InvalidStateTransitionError, NotFoundError, ValidationError } from "../domain/errors";
 
 export interface PaginationParams {
   cursor?: string;
@@ -29,7 +36,11 @@ export class TicketService {
   ) {}
 
   public async createTicket(input: CreateTicketInput): Promise<Ticket> {
-    let builder = new TicketBuilder().forCreator(input.creatorId).withOverview(input.ticketOverview);
+    let builder = new TicketBuilder()
+      .forCreator(input.creatorId)
+      .withOverview(input.ticketOverview)
+      .forCustomer(input.customerId)
+      .aboutOrder(input.orderId);
     for (const doc of input.attachedDocuments ?? []) {
       builder = builder.withAttachedDocument(doc);
     }
@@ -105,6 +116,44 @@ export class TicketService {
       throw new ForbiddenError(`You do not have access to ticket ${ticketId}`);
     }
     return ticket;
+  }
+
+  /**
+   * Lets the assigned agent (or a privileged role) add the record-backed
+   * facts the summariser's gate asked for -- customerId / orderId -- so a
+   * NEEDS_INFO outcome is actionable. Not allowed once the case is final.
+   * Passing an empty string clears a fact; omitting a field leaves it as-is.
+   */
+  public async updateFacts(
+    ticketId: string,
+    requestingUser: AuthenticatedPrincipal,
+    facts: TicketFactsInput,
+  ): Promise<Ticket> {
+    const ticket = await this.ticketRepo.getById(ticketId);
+    if (!ticket) {
+      throw new NotFoundError(`Ticket ${ticketId} not found`);
+    }
+    if (!isPrivilegedRole(requestingUser.role) && ticket.assigneeId !== requestingUser.userId) {
+      throw new ForbiddenError("Only the assigned agent may update this ticket's facts");
+    }
+    if (ticket.ticketStatus === "RESOLVED" || ticket.ticketStatus === "CLOSED") {
+      throw new InvalidStateTransitionError(`Cannot change facts on a ${ticket.ticketStatus} ticket`);
+    }
+
+    const errors: string[] = [];
+    const customerId = validateOptionalIdentifier("customerId", facts.customerId, errors);
+    const orderId = validateOptionalIdentifier("orderId", facts.orderId, errors);
+    if (errors.length > 0) {
+      throw new ValidationError("Invalid ticket facts", errors);
+    }
+
+    const fields: UpdateTicketFields = {};
+    if (facts.customerId !== undefined) fields.customerId = customerId ?? "";
+    if (facts.orderId !== undefined) fields.orderId = orderId ?? "";
+    if (Object.keys(fields).length === 0) {
+      return ticket;
+    }
+    return this.ticketRepo.updateStatusAndFields(ticket.ticketId, ticket.version, fields);
   }
 
   public async submitDraft(input: SubmitDraftInput): Promise<Ticket> {

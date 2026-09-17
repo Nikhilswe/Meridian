@@ -34,8 +34,13 @@ export class AssignmentService {
       return;
     }
 
-    const configuredPoolSize = this.config.get<number>("assignment", "agentPoolSize", agents.length);
-    const poolSize = Math.min(configuredPoolSize, agents.length);
+    // assignment.agentPoolSize caps how many agents are in rotation; 0 (or
+    // unset) means every SUPPORT_AGENT rotates. The cap is taken from the
+    // head of the displayName-ordered list, so with a cap a newly signed-up
+    // agent only receives work if they sort inside it -- which is why the
+    // local config uses 0: every sign-up in a class demo should get tickets.
+    const configuredPoolSize = this.config.get<number>("assignment", "agentPoolSize", 0);
+    const poolSize = configuredPoolSize > 0 ? Math.min(configuredPoolSize, agents.length) : agents.length;
     const pool = agents.slice(0, poolSize);
 
     const nextIndex = await this.cursorRepo.incrementAndGet();

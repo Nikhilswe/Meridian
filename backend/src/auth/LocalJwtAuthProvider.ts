@@ -1,11 +1,15 @@
 import * as bcrypt from "bcryptjs";
 import * as jwt from "jsonwebtoken";
 import { inject, injectable } from "tsyringe";
-import { AuthenticatedPrincipal, User } from "@scaler/shared-types";
+import { randomUUID } from "node:crypto";
+import { AuthenticatedPrincipal, User, UserRole } from "@scaler/shared-types";
 import { IUserRepository } from "../repositories/IUserRepository";
 import { ISecretsProvider } from "../secrets/ISecretsProvider";
-import { UnauthorizedError } from "../domain/errors";
+import { ConflictError, UnauthorizedError } from "../domain/errors";
 import { IAuthProvider } from "./IAuthProvider";
+
+/** Matches db/seed.ts so seeded and signed-up hashes cost the same to verify. */
+const BCRYPT_COST = 10;
 
 interface JwtClaims {
   userId: string;
@@ -37,17 +41,56 @@ export class LocalJwtAuthProvider implements IAuthProvider {
       throw new UnauthorizedError("Invalid email or password");
     }
 
+    return this.generateTokenAndUser(record.userId, record.displayName, record.email, record.role);
+  }
+
+  /**
+   * Self-service registration. Same bcrypt cost as the seed script so a
+   * signed-up user and a seeded user are indistinguishable at login time.
+   * Duplicate email is a 409 (ConflictError), never a 401 -- the caller is
+   * not "unauthorised", the record already exists.
+   */
+  public async signup(
+    email: string,
+    password: string,
+    displayName: string,
+    role: UserRole = "SUPPORT_AGENT",
+  ): Promise<{ token: string; user: User }> {
+    const normalisedEmail = email.trim().toLowerCase();
+    const existing = await this.userRepo.getByEmailWithCredentials(normalisedEmail);
+    if (existing) {
+      throw new ConflictError("An account with this email already exists");
+    }
+
+    const passwordHash = await bcrypt.hash(password, BCRYPT_COST);
+    const created = await this.userRepo.create({
+      userId: `user-${randomUUID()}`,
+      email: normalisedEmail,
+      displayName: displayName.trim(),
+      role,
+      passwordHash,
+    });
+
+    return this.generateTokenAndUser(created.userId, created.displayName, created.email, created.role);
+  }
+
+  private async generateTokenAndUser(
+    userId: string,
+    displayName: string,
+    email: string,
+    role: AuthenticatedPrincipal["role"],
+  ): Promise<{ token: string; user: User }> {
     const secret = await this.getSigningSecret();
     const expiry = process.env.JWT_EXPIRY || "8h";
-    const claims: JwtClaims = { userId: record.userId, role: record.role };
+    const claims: JwtClaims = { userId, role };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const token = jwt.sign(claims, secret, { algorithm: "HS256", expiresIn: expiry as any });
 
     const user: User = {
-      userId: record.userId,
-      displayName: record.displayName,
-      email: record.email,
-      role: record.role,
+      userId,
+      displayName,
+      email,
+      role,
     };
     return { token, user };
   }

@@ -8,3 +8,12 @@ coverage/
 .DS_Store
 *.tsbuildinfo
 docker/data/
+
+# Browser HAR captures contain bearer tokens and request bodies -- never commit.
+*.har
+# Local attachment storage (DOCS_LOCAL_PATH default) and lint/test caches.
+.data/
+.eslintcache
+
+# Claude desktop / Claude Code local preview config (per-machine)
+.claude/

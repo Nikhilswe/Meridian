@@ -21,4 +21,6 @@ export interface Order {
   amount: number;
   currency: string;
   status: "PLACED" | "SHIPPED" | "DELIVERED" | "REFUNDED" | "CANCELLED";
+  /** ISO-8601. Required by delivery-window policies; absent means "not yet known", never "zero days". */
+  deliveredDate?: string;
 }

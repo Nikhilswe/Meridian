@@ -64,10 +64,21 @@ export const TEST_POLICIES: Policy[] = [
 export const TEST_ORDERS: Order[] = [
   {
     orderId: "order-1",
-    customerId: "agent-1",
+    customerId: "cust-1",
     itemSummary: "Widget",
     orderDate: new Date().toISOString(),
     amount: 42,
+    currency: "USD",
+    status: "DELIVERED",
+    deliveredDate: new Date().toISOString(),
+  },
+  {
+    // Delivered but the date is unknown -> the summariser's gate must ask for it (C2).
+    orderId: "order-nodate",
+    customerId: "cust-1",
+    itemSummary: "Gadget",
+    orderDate: new Date().toISOString(),
+    amount: 15,
     currency: "USD",
     status: "DELIVERED",
   },
@@ -82,7 +93,7 @@ export const TEST_ORDERS: Order[] = [
  */
 export async function setupTestContainer(
   configDir: string = CONFIG_FIXTURE_DIR,
-): Promise<{ ticketRepo: InMemoryTicketRepository }> {
+): Promise<{ ticketRepo: InMemoryTicketRepository; userRepo: InMemoryUserRepository }> {
   container.clearInstances();
 
   process.env.APP_ENV = "local";
@@ -133,5 +144,5 @@ export async function setupTestContainer(
   container.registerSingleton(AssignmentService);
   container.resolve(AssignmentService); // eagerly subscribe to the event bus
 
-  return { ticketRepo };
+  return { ticketRepo, userRepo };
 }

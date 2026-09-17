@@ -22,4 +22,23 @@ export class PostgresUserRepository implements IUserRepository {
     const result = await this.pool.query(`SELECT * FROM users WHERE "role" = $1 ORDER BY "displayName"`, [role]);
     return result.rows.map(mapUserRow);
   }
+
+  public async create(user: {
+    userId: string;
+    email: string;
+    displayName: string;
+    role: UserRole;
+    passwordHash: string;
+  }): Promise<User> {
+    // Same column list as db/seed.ts. The UNIQUE constraint on "email" is
+    // the real duplicate guard; LocalJwtAuthProvider checks first only to
+    // give a friendlier 409 than a raw pg unique-violation.
+    const result = await this.pool.query(
+      `INSERT INTO users ("userId", "displayName", "email", "role", "passwordHash")
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [user.userId, user.displayName, user.email, user.role, user.passwordHash],
+    );
+    return mapUserRow(result.rows[0]);
+  }
 }

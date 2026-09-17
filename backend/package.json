@@ -11,11 +11,15 @@
     "test": "jest --testPathPattern=tests/unit",
     "test:integration": "jest --testPathPattern=tests/integration --runInBand",
     "smoke": "ts-node tests/smoke/smokeTest.ts",
-    "lint": "eslint src --ext .ts",
+    "lint": "eslint src tests --ext .ts --max-warnings 0",
     "migrate": "ts-node src/db/migrate.ts",
-    "seed": "ts-node src/db/seed.ts"
+    "seed": "ts-node src/db/seed.ts",
+    "test:coverage": "jest --testPathPattern=\"tests/(unit|integration)\" --runInBand --coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "check:llm": "ts-node scripts/check-llm.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.126.0",
     "@aws-sdk/client-s3": "^3.658.0",
     "@aws-sdk/client-secrets-manager": "^3.658.0",
     "@scaler/shared-types": "0.1.0",

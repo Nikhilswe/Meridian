@@ -1,9 +1,10 @@
-import { Order, Policy } from "@scaler/shared-types";
+import { Policy, SuppliedFacts } from "@scaler/shared-types";
 
 export interface LLMGenerateInput {
   ticketOverview: string;
+  /** Record-backed facts (issue status, customer, order) -- the source of truth the draft must follow. */
+  facts: SuppliedFacts;
   relatedPolicies: Policy[];
-  relatedOrders: Order[];
 }
 
 export interface LLMGenerateOutput {
@@ -13,8 +14,8 @@ export interface LLMGenerateOutput {
 
 /**
  * Single seam for "call an LLM to summarise a case and draft a reply".
- * Concrete choice of OpenAI / Ollama / deterministic test-stub is resolved
- * by LLMProviderFactory from config, never hardcoded at a call site.
+ * Concrete choice of Anthropic / OpenAI / Ollama / deterministic test-stub is
+ * resolved by LLMProviderFactory from config, never hardcoded at a call site.
  */
 export interface ILLMProvider {
   generate(input: LLMGenerateInput): Promise<LLMGenerateOutput>;

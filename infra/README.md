@@ -43,13 +43,48 @@ cd infra/cfn
 sam build --template-file main.template.yaml
 sam deploy --guided \
   --stack-name scaler-beta \
-  --parameter-overrides EnvironmentName=beta LlmProvider=anthropic \
+  --parameter-overrides EnvironmentName=beta LlmProvider=anthropic AlarmEmail=oncall@example.com \
   --capabilities CAPABILITY_IAM
+# AlarmEmail is optional; SNS sends a confirmation email you must click before
+# notifications flow. Leave it out to create the topic + alarms without a
+# subscriber (attach a chat/pager integration to the AlarmTopicArn output later).
 # then set the real key (never put this in source control or the template):
 aws secretsmanager put-secret-value \
   --secret-id /scaler/beta/ANTHROPIC_API_KEY \
   --secret-string '{"ANTHROPIC_API_KEY":"sk-ant-..."}'
 ```
+
+## Monitoring and alarms (what fires, and what to do)
+Every alarm publishes to the `AlarmTopicArn` output (SNS). The composite
+`scaler-<env>-backend-unhealthy` alarm is the one to page on; the
+individual alarms say where to look. The `BackendDashboardUrl` output has
+all of them plus the underlying graphs on one page.
+
+| Alarm | Fires when | First thing to check |
+|---|---|---|
+| `http-5xx` | any 5xx at the API Gateway edge in 5 min | API Lambda log group -- was it a crash (`api-lambda-errors`) or an app 500 (`api-500s`)? |
+| `http-latency-p95` | p95 > 5 s for 10 min | summarise route slow (LLM) vs everything slow (DynamoDB/Lambda cold starts) |
+| `api-lambda-errors` / `-throttles` / `-duration-p95` | the Express Lambda crashed / hit concurrency limits / p95 > 12 s (80% of timeout) | log group `/aws/lambda/scaler-<env>-api`; account concurrency quota |
+| `api-500s` | the Express `errorHandler` logged `Unhandled error:` | grep that string in the API log group -- the message is the thrown error |
+| `summarise-errors` / `-throttles` / `-duration-p95` | the LLM Lambda failed / was throttled / p95 > 24 s | **switch agents to the manual reply process**, then check the provider |
+| `llm-provider-failures` | provider returned non-2xx 3+ times in 5 min | secret `/scaler/<env>/ANTHROPIC_API_KEY` present and valid? provider status page? quota? |
+| `assign-errors` / `assign-stream-lag` | assignment Lambda failing / > 60 s behind the tickets stream | tickets stuck in `OPEN`; a poison record blocks the shard until retries exhaust |
+| `assign-dlq-not-empty` | a ticket-created event exhausted 3 retries | the ticket exists but is unassigned: assign it by hand, fix the cause, then redrive the DLQ |
+| `tickets-read/write-throttle` | DynamoDB throttled the tickets table | a burst beyond on-demand's instant capacity; if it persists, look for a hot key |
+
+Runbook (the four steps the on-call person can always do safely):
+1. Pause the AI path if `summarise-*` or `llm-provider-failures` is firing:
+   tell agents to reply manually; the review workflow does not depend on
+   the draft existing.
+2. Read the log group named in the alarm description for the 5-minute
+   window; every `Unhandled error:` / provider-failure line carries the
+   error message.
+3. Check the policy version and secret before assuming code is at fault.
+4. Do not redrive the DLQ or resume the AI path until the cause is known;
+   record who decided and when.
+
+Alarms treat missing data as OK (no traffic is not an outage). Standard
+alarms cost $0.10/month each -- see `../docs/aws-cost-notes.md`.
 
 ## IAM / security posture already in the template
 - Every Lambda's permissions are scoped with SAM `Policies:` shorthand

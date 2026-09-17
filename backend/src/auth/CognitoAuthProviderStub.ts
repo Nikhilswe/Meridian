@@ -68,6 +68,16 @@ export class CognitoAuthProviderStub implements IAuthProvider {
     return { token: accessToken, user };
   }
 
+  /**
+   * Self-service registration is deliberately not exposed in AWS mode: user
+   * creation belongs to Cognito (hosted UI, or an admin's SignUp +
+   * ConfirmSignUp flow), where MFA/verification policy lives. Kept as an
+   * explicit refusal so the IAuthProvider contract is honoured.
+   */
+  public async signup(_email: string, _password: string, _displayName: string, _role?: UserRole): Promise<{ token: string; user: User }> {
+    throw new UnauthorizedError("Sign-up is managed by AWS Cognito in this environment");
+  }
+
   public async verify(token: string): Promise<AuthenticatedPrincipal> {
     try {
       const payload = await this.verifier.verify(token);

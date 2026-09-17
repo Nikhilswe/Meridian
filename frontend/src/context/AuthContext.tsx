@@ -7,8 +7,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { LoginResponse } from "@scaler/shared-types";
-import { login as loginRequest } from "../api/auth";
+import type { LoginResponse, SignupRequest } from "@scaler/shared-types";
+import { login as loginRequest, signup as signupRequest } from "../api/auth";
 import { setAuthToken, setUnauthorizedHandler } from "../api/client";
 
 type AuthUser = LoginResponse["user"];
@@ -18,6 +18,7 @@ interface AuthContextValue {
   user: AuthUser | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, displayName: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -33,11 +34,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
 
   const logout = useCallback(() => {
+    setAuthToken(null);
     setToken(null);
     setUser(null);
   }, []);
 
   // Keep the api client's module-level token in sync with context state.
+  // NOTE: login()/logout() also push the token synchronously, because this
+  // effect runs AFTER child effects -- a page mounted by the post-login
+  // navigation would otherwise fire its first request before the token
+  // landed, get a 401, and trip the unauthorized handler (auto-logout).
   useEffect(() => {
     setAuthToken(token);
   }, [token]);
@@ -51,6 +57,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     const response = await loginRequest({ email, password });
+    setAuthToken(response.token);
+    setToken(response.token);
+    setUser(response.user);
+  }, []);
+
+  const signup = useCallback(async (email: string, password: string, displayName: string) => {
+    const req: SignupRequest = { email, password, displayName };
+    const response = await signupRequest(req);
+    setAuthToken(response.token);
     setToken(response.token);
     setUser(response.user);
   }, []);
@@ -61,9 +76,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       isAuthenticated: Boolean(token),
       login,
+      signup,
       logout,
     }),
-    [token, user, login, logout],
+    [token, user, login, signup, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

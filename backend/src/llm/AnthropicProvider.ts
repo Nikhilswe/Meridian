@@ -1,13 +1,11 @@
 import { inject, injectable } from "tsyringe";
+import Anthropic from "@anthropic-ai/sdk";
 import { ISecretsProvider } from "../secrets/ISecretsProvider";
 import { ILLMProvider, LLMGenerateInput, LLMGenerateOutput } from "./ILLMProvider";
 import { SYSTEM_PROMPT, buildUserPrompt } from "./promptBuilder";
 
-const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
-const ANTHROPIC_API_VERSION = "2023-06-01";
-
 /**
- * Claude-backed provider (Anthropic Messages API). Mirrors OpenAIProvider's
+ * Claude-backed provider using the official Anthropic SDK. Mirrors OpenAIProvider's
  * shape exactly so LLMProviderFactory can swap between them purely via the
  * `llm.provider` config value -- no call site cares which one is active.
  *
@@ -25,39 +23,38 @@ export class AnthropicProvider implements ILLMProvider {
     if (!apiKey) {
       throw new Error("ANTHROPIC_API_KEY is not configured -- cannot call AnthropicProvider");
     }
-    const model = process.env.ANTHROPIC_MODEL || "claude-haiku-4-5";
+    const model = process.env.ANTHROPIC_MODEL || "claude-opus-5";
 
-    const response = await fetch(ANTHROPIC_MESSAGES_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        // Never log this header / the apiKey value.
-        "x-api-key": apiKey,
-        "anthropic-version": ANTHROPIC_API_VERSION,
-      },
-      body: JSON.stringify({
+    const client = new Anthropic({ apiKey });
+    try {
+      const response = await client.messages.create({
         model,
         max_tokens: 1024,
         system: `${SYSTEM_PROMPT}\n\nRespond with ONLY a single valid JSON object of the shape {"summary": string, "draftMessage": string} and nothing else -- no markdown fences, no commentary.`,
         messages: [{ role: "user", content: buildUserPrompt(input) }],
-      }),
-    });
-
-    if (!response.ok) {
-      // Safe to include status text; never include request headers/body here.
-      throw new Error(`Anthropic API request failed with status ${response.status}`);
+      });
+      return this.processResponse(response);
+    } catch (error: unknown) {
+      if (error instanceof Anthropic.APIError) {
+        // Status + the API's own error body only. The SDK never puts the
+        // x-api-key in `message`/`error`, so this stays secret-free -- and
+        // the exact string below is what the SummariseProviderFailures
+        // CloudWatch metric filter matches on (infra/cfn/main.template.yaml).
+        console.error(`Anthropic API request failed with status ${error.status}: ${error.message}`);
+        throw new Error(`Anthropic API request failed with status ${error.status}`);
+      }
+      throw error;
     }
+  }
 
-    const body = (await response.json()) as {
-      content?: { type?: string; text?: string }[];
-    };
-    const textBlock = body.content?.find((block) => block.type === "text");
-    const content = textBlock?.text;
-    if (!content) {
+  private async processResponse(response: Anthropic.Message): Promise<LLMGenerateOutput> {
+
+    const textBlock = response.content.find((block) => block.type === "text");
+    if (!textBlock || textBlock.type !== "text") {
       throw new Error("Anthropic API response did not contain a text content block");
     }
 
-    const jsonText = extractJsonObject(content);
+    const jsonText = extractJsonObject(textBlock.text);
     const parsed = JSON.parse(jsonText) as { summary?: string; draftMessage?: string };
     if (!parsed.summary || !parsed.draftMessage) {
       throw new Error("Anthropic API response JSON missing summary/draftMessage");

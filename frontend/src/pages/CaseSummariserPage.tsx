@@ -56,13 +56,18 @@ export function CaseSummariserPage() {
   return (
     <div className="page">
       <section className="card">
-        <h2>Case Summariser</h2>
-        <p className="muted">Cases currently assigned to you.</p>
+        <div className="card__header">
+          <div className="card__title">
+            <h2>Case Summariser</h2>
+            <p className="card__subtitle">Cases currently assigned to you. Open one to generate a summary and draft reply.</p>
+          </div>
+        </div>
         <ErrorBanner error={error} />
         {loading ? (
           <LoadingSpinner label="Loading cases…" />
         ) : (
           <>
+            <div className="table-wrap">
             <table className="data-table data-table--clickable">
               <thead>
                 <tr>
@@ -75,24 +80,43 @@ export function CaseSummariserPage() {
               <tbody>
                 {cases.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="muted">
+                    <td colSpan={4} className="cell-empty">
                       No cases assigned to you.
                     </td>
                   </tr>
                 )}
                 {cases.map((c) => (
-                  <tr key={c.ticketId} onClick={() => navigate(`/cases/${c.ticketId}`)}>
-                    <td>{c.ticketId}</td>
+                  <tr
+                    key={c.ticketId}
+                    tabIndex={0}
+                    role="link"
+                    aria-label={`Open case ${c.ticketId}`}
+                    onClick={() => navigate(`/cases/${c.ticketId}`)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        navigate(`/cases/${c.ticketId}`);
+                      }
+                    }}
+                  >
+                    <td className="cell-id">{c.ticketId}</td>
                     <td>
                       <StatusBadge status={c.ticketStatus} />
                     </td>
                     <td>{c.creatorId}</td>
-                    <td>{new Date(c.ticketCreationDate).toLocaleString()}</td>
+                    <td className="cell-date">{new Date(c.ticketCreationDate).toLocaleString()}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            <Pagination canGoPrev={pageIndex > 0} hasMore={hasMore} onPrev={handlePrev} onNext={handleNext} />
+            </div>
+            <div className="list-footer">
+              <span className="list-footer__meta">
+                Page {pageIndex + 1}
+                {cases.length > 0 ? ` · ${cases.length} case${cases.length === 1 ? "" : "s"}` : ""}
+              </span>
+              <Pagination canGoPrev={pageIndex > 0} hasMore={hasMore} onPrev={handlePrev} onNext={handleNext} />
+            </div>
           </>
         )}
       </section>

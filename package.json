@@ -10,12 +10,16 @@
   ],
   "scripts": {
     "build": "npm run build --workspace=packages/shared-types && npm run build --workspace=backend && npm run build --workspace=frontend",
-    "test": "npm run test --workspace=backend",
+    "typecheck": "npm run build --workspace=packages/shared-types && npm run typecheck --workspace=backend && npm run typecheck --workspace=frontend",
+    "lint": "npm run lint --workspace=backend && npm run lint --workspace=frontend",
+    "test": "npm run test --workspace=backend && npm run test --workspace=frontend",
     "test:integration": "npm run test:integration --workspace=backend",
+    "test:coverage": "npm run build --workspace=packages/shared-types && npm run test:coverage --workspace=backend && npm run test:coverage --workspace=frontend",
+    "check": "npm run lint && npm run typecheck && npm run test:coverage",
     "smoke": "npm run smoke --workspace=backend",
+    "check:llm": "npm run check:llm --workspace=backend",
     "dev:backend": "npm run dev --workspace=backend",
     "dev:frontend": "npm run dev --workspace=frontend",
-    "lint": "npm run lint --workspace=backend && npm run lint --workspace=frontend",
     "docker:up": "docker compose up --build",
     "docker:down": "docker compose down -v"
   },

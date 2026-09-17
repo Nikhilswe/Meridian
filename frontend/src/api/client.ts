@@ -99,8 +99,16 @@ export async function apiGet<T>(path: string, params?: QueryParams): Promise<T> 
 }
 
 export async function apiPost<T>(path: string, body?: unknown): Promise<T> {
+  return apiSend<T>("POST", path, body);
+}
+
+export async function apiPatch<T>(path: string, body?: unknown): Promise<T> {
+  return apiSend<T>("PATCH", path, body);
+}
+
+async function apiSend<T>(method: "POST" | "PATCH", path: string, body?: unknown): Promise<T> {
   const response = await fetch(buildUrl(path), {
-    method: "POST",
+    method,
     headers: {
       "Content-Type": "application/json",
       ...authHeaders(),
