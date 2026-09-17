@@ -1,5 +1,5 @@
 {
-  "name": "scaler-lambda-summarise-case",
+  "name": "meridian-lambda-summarise-case",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

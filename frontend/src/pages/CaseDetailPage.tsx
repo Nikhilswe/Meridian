@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import type { SummariseCaseResponse, SummariseCheck, SuppliedFacts, Ticket, Policy } from "@scaler/shared-types";
+import type { SummariseCaseResponse, SummariseCheck, SuppliedFacts, Ticket, Policy } from "@meridian/shared-types";
 import { getCase, submitDraft, summariseCase, updateCaseFacts } from "../api/cases";
 import { StatusBadge } from "../components/StatusBadge";
 import { LoadingSpinner } from "../components/LoadingSpinner";

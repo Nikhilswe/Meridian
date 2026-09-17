@@ -3,7 +3,7 @@ import type {
   PaginatedRequest,
   PaginatedResponse,
   Ticket,
-} from "@scaler/shared-types";
+} from "@meridian/shared-types";
 import { apiGet, apiPost } from "./client";
 
 export function createTicket(input: CreateTicketInput): Promise<Ticket> {

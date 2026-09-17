@@ -1,4 +1,4 @@
-import { Order } from "@scaler/shared-types";
+import { Order } from "@meridian/shared-types";
 import {
   CHECK_CUSTOMER_IDENTIFIED,
   CHECK_DELIVERY_DATE_PRESENT,

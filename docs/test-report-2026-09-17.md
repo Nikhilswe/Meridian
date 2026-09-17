@@ -6,7 +6,7 @@ below). Every layer was exercised against a **real** local Postgres 16
 instance and a **real** running Node server, not mocks-only.
 
 - Node v22.22.2, npm 10.9.7, PostgreSQL 16.13
-- `DATABASE_URL=postgresql://scaler:scaler_local_pw@localhost:5432/scaler`
+- `DATABASE_URL=postgresql://meridian:meridian_local_pw@localhost:5432/meridian`
 - `APP_ENV=local` (so `llm.provider` resolves to `anthropic` per
   `backend/src/config/data/local.json` -- no real Anthropic call is made
   anywhere in this run because every summarise call below used a ticket

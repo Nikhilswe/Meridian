@@ -1,6 +1,6 @@
 import { Pool } from "pg";
 import { inject, injectable } from "tsyringe";
-import { Policy } from "@scaler/shared-types";
+import { Policy } from "@meridian/shared-types";
 import { IPolicyRepository } from "../IPolicyRepository";
 import { mapPolicyRow } from "./rowMappers";
 

@@ -1,4 +1,4 @@
-import { AttachedDocument, CreateTicketInput } from "@scaler/shared-types";
+import { AttachedDocument, CreateTicketInput } from "@meridian/shared-types";
 import { ValidationError } from "./errors";
 
 const MAX_OVERVIEW_LENGTH = 5000;

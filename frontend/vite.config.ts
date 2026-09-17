@@ -2,7 +2,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// Vite config for the Scaler frontend.
+// Vite config for the Meridian frontend.
 //
 // The API base URL is read directly by src/api/client.ts via
 // `import.meta.env.VITE_API_BASE_URL` (falling back to http://localhost:4000),

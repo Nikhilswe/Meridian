@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { SummariseCaseResponse, Ticket } from "@scaler/shared-types";
+import type { SummariseCaseResponse, Ticket } from "@meridian/shared-types";
 import { AGENT, LOGIN_OK, mockFetch, page, renderApp, resetClient, ticket, type RouteTable } from "../../test/harness";
 
 /**
@@ -12,7 +12,7 @@ import { AGENT, LOGIN_OK, mockFetch, page, renderApp, resetClient, ticket, type 
 
 async function signIn(startAt = "/login") {
   renderApp(startAt);
-  await userEvent.type(screen.getByLabelText("Email"), "asha.kapoor@scaler.local");
+  await userEvent.type(screen.getByLabelText("Email"), "asha.kapoor@meridian.local");
   await userEvent.type(screen.getByLabelText("Password"), "AgentDemo!123");
   await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
 }
@@ -52,7 +52,7 @@ describe("LoginPage", () => {
     await userEvent.click(screen.getByRole("button", { name: "Sign in" }));
     await screen.findByRole("heading", { name: "Create a ticket" });
     await userEvent.click(screen.getByRole("link", { name: "Tickets" }));
-    expect(screen.queryByRole("heading", { name: "Sign in to Scaler" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Sign in to Meridian" })).not.toBeInTheDocument();
   });
 });
 
@@ -64,13 +64,13 @@ describe("SignupPage", () => {
     });
     renderApp("/signup");
     await userEvent.type(screen.getByLabelText("Full name"), "Class Demo Agent");
-    await userEvent.type(screen.getByLabelText("Email"), "demo.agent@scaler.local");
+    await userEvent.type(screen.getByLabelText("Email"), "demo.agent@meridian.local");
     await userEvent.type(screen.getByLabelText(/Password/), "DemoPass!2026");
     await userEvent.click(screen.getByRole("button", { name: "Create account" }));
 
     expect(await screen.findByRole("heading", { name: "Create a ticket" })).toBeInTheDocument();
     expect(screen.getByText("Class Demo Agent")).toBeInTheDocument();
-    expect(spy.calls[0]!.body).toEqual({ email: "demo.agent@scaler.local", password: "DemoPass!2026", displayName: "Class Demo Agent" });
+    expect(spy.calls[0]!.body).toEqual({ email: "demo.agent@meridian.local", password: "DemoPass!2026", displayName: "Class Demo Agent" });
     expect(spy.calls[1]!.headers.get("Authorization")).toBe("Bearer new-token");
   });
 
@@ -79,7 +79,7 @@ describe("SignupPage", () => {
     renderApp("/signup");
     expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute("href", "/login");
     await userEvent.type(screen.getByLabelText("Full name"), "Dup");
-    await userEvent.type(screen.getByLabelText("Email"), "dup@scaler.local");
+    await userEvent.type(screen.getByLabelText("Email"), "dup@meridian.local");
     await userEvent.type(screen.getByLabelText(/Password/), "password123");
     await userEvent.click(screen.getByRole("button", { name: "Create account" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("already exists");

@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import type { Request, Response } from "express";
-import { Ticket, User } from "@scaler/shared-types";
+import { Ticket, User } from "@meridian/shared-types";
 import { TicketService } from "../../src/services/TicketService";
 import { AssignmentService } from "../../src/services/AssignmentService";
 import { ITicketRepository } from "../../src/repositories/ITicketRepository";

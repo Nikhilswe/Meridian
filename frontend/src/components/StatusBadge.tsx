@@ -1,4 +1,4 @@
-import type { TicketStatus } from "@scaler/shared-types";
+import type { TicketStatus } from "@meridian/shared-types";
 
 const STATUS_LABEL: Record<TicketStatus, string> = {
   OPEN: "Open",

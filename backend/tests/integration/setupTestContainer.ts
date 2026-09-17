@@ -2,7 +2,7 @@ import "reflect-metadata";
 import * as bcrypt from "bcryptjs";
 import * as path from "path";
 import { container } from "tsyringe";
-import { Policy, Order, UserRole } from "@scaler/shared-types";
+import { Policy, Order, UserRole } from "@meridian/shared-types";
 import { ConfigResolver } from "../../src/config/ConfigResolver";
 import { ISecretsProvider } from "../../src/secrets/ISecretsProvider";
 import { IEventBus } from "../../src/events/IEventBus";

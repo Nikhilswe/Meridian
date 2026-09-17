@@ -12,5 +12,5 @@ const app = createApp();
 const port = Number(process.env.PORT) || 4000;
 
 app.listen(port, () => {
-  console.log(`Scaler backend listening on port ${port} (APP_ENV=${process.env.APP_ENV || "local"})`);
+  console.log(`Meridian backend listening on port ${port} (APP_ENV=${process.env.APP_ENV || "local"})`);
 });

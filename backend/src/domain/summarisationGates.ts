@@ -1,4 +1,4 @@
-import { Order, SuppliedFacts, SummariseCheck, Ticket } from "@scaler/shared-types";
+import { Order, SuppliedFacts, SummariseCheck, Ticket } from "@meridian/shared-types";
 
 /**
  * Deterministic checks that surround the model call in SummarisationService.

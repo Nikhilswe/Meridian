@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { LoginResponse, SignupRequest } from "@scaler/shared-types";
+import type { LoginResponse, SignupRequest } from "@meridian/shared-types";
 import { login as loginRequest, signup as signupRequest } from "../api/auth";
 import { setAuthToken, setUnauthorizedHandler } from "../api/client";
 

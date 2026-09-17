@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import type { Request } from "express";
-import { Policy } from "@scaler/shared-types";
+import { Policy } from "@meridian/shared-types";
 import {
   mapOrderRow,
   mapPolicyRow,

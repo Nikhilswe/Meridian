@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { PaginatedResponse, Ticket } from "@scaler/shared-types";
+import { PaginatedResponse, Ticket } from "@meridian/shared-types";
 import { TicketService } from "../services/TicketService";
 import { ConfigResolver } from "../config/ConfigResolver";
 import { buildAuthMiddleware } from "../auth/authMiddleware";

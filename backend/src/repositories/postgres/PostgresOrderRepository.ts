@@ -1,6 +1,6 @@
 import { Pool } from "pg";
 import { inject, injectable } from "tsyringe";
-import { Order } from "@scaler/shared-types";
+import { Order } from "@meridian/shared-types";
 import { IOrderRepository } from "../IOrderRepository";
 import { mapOrderRow } from "./rowMappers";
 

@@ -6,13 +6,13 @@
  * deployment.
  *
  * Logs in as the dedicated smoke-test user seeded by src/db/seed.ts
- * (smoke-test@scaler.local). Its password comes from SMOKE_TEST_PASSWORD
+ * (smoke-test@meridian.local). Its password comes from SMOKE_TEST_PASSWORD
  * (same env var seed.ts reads), defaulting to the same demo value so a
  * fresh `npm run seed` + `npm run smoke` pair just works.
  */
 
 const BASE_URL = process.env.SMOKE_BASE_URL || "http://localhost:4000";
-const SMOKE_EMAIL = "smoke-test@scaler.local";
+const SMOKE_EMAIL = "smoke-test@meridian.local";
 const SMOKE_PASSWORD = process.env.SMOKE_TEST_PASSWORD || "SmokeTest!123";
 
 interface ScenarioResult {

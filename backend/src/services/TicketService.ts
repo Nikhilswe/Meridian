@@ -6,7 +6,7 @@ import {
   SubmitDraftInput,
   Ticket,
   TicketFactsInput,
-} from "@scaler/shared-types";
+} from "@meridian/shared-types";
 import { ITicketRepository, UpdateTicketFields } from "../repositories/ITicketRepository";
 import { IEventBus } from "../events/IEventBus";
 import { EVENT_TYPE_TICKET_CREATED, TicketCreatedEvent } from "../events/events";

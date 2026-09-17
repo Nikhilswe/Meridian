@@ -1,4 +1,4 @@
-import { Policy } from "@scaler/shared-types";
+import { Policy } from "@meridian/shared-types";
 
 /**
  * Deliberately naive keyword/substring retrieval, used to pick a handful of

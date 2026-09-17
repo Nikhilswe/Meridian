@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent, type KeyboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import type { AttachedDocument, DocumentType, Ticket } from "@scaler/shared-types";
+import type { AttachedDocument, DocumentType, Ticket } from "@meridian/shared-types";
 import { useAuth } from "../context/AuthContext";
 import { createTicket, listTickets } from "../api/tickets";
 import { StatusBadge } from "../components/StatusBadge";

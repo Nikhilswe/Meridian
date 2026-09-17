@@ -2,7 +2,7 @@ import * as bcrypt from "bcryptjs";
 import * as jwt from "jsonwebtoken";
 import { inject, injectable } from "tsyringe";
 import { randomUUID } from "node:crypto";
-import { AuthenticatedPrincipal, User, UserRole } from "@scaler/shared-types";
+import { AuthenticatedPrincipal, User, UserRole } from "@meridian/shared-types";
 import { IUserRepository } from "../repositories/IUserRepository";
 import { ISecretsProvider } from "../secrets/ISecretsProvider";
 import { ConflictError, UnauthorizedError } from "../domain/errors";

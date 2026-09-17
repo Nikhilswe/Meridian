@@ -14,7 +14,7 @@ describe("LoginPage", () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByRole("heading", { name: "Sign in to Scaler" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Sign in to Meridian" })).toBeInTheDocument();
     expect(screen.getByLabelText("Email")).toBeInTheDocument();
     expect(screen.getByLabelText("Password")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Sign in" })).toBeInTheDocument();

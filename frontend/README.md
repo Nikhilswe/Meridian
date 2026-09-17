@@ -1,6 +1,6 @@
-# Scaler Frontend
+# Meridian Frontend
 
-React + TypeScript + Vite single-page app for the Scaler support-ticketing
+React + TypeScript + Vite single-page app for the Meridian support-ticketing
 and case-summariser platform.
 
 ## Running locally
@@ -27,7 +27,7 @@ This starts the Vite dev server (default `http://localhost:5173`).
 The app talks to the backend REST API at the URL given by the
 `VITE_API_BASE_URL` environment variable (a standard Vite `.env` file, or
 your shell environment), falling back to `http://localhost:4000` when unset.
-Point it at wherever the `@scaler/backend` Express server is running, e.g.:
+Point it at wherever the `@meridian/backend` Express server is running, e.g.:
 
 ```
 VITE_API_BASE_URL=http://localhost:4000

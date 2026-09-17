@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { ApiErrorBody } from "@scaler/shared-types";
+import { ApiErrorBody } from "@meridian/shared-types";
 import {
   ConflictError,
   ForbiddenError,

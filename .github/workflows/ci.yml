@@ -81,18 +81,18 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_USER: scaler
-          POSTGRES_PASSWORD: scaler_local_pw
-          POSTGRES_DB: scaler
+          POSTGRES_USER: meridian
+          POSTGRES_PASSWORD: meridian_local_pw
+          POSTGRES_DB: meridian
         ports: ["5432:5432"]
         options: >-
-          --health-cmd "pg_isready -U scaler"
+          --health-cmd "pg_isready -U meridian"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
     env:
       APP_ENV: local
-      DATABASE_URL: postgresql://scaler:scaler_local_pw@localhost:5432/scaler
+      DATABASE_URL: postgresql://meridian:meridian_local_pw@localhost:5432/meridian
       JWT_SECRET: ci-only-signing-secret
       JWT_EXPIRY: 1h
       SMOKE_BASE_URL: http://localhost:4000

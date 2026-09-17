@@ -1,5 +1,5 @@
 {
-  "name": "scaler-lambda-assign-ticket",
+  "name": "meridian-lambda-assign-ticket",
   "version": "0.1.0",
   "private": true,
   "dependencies": {

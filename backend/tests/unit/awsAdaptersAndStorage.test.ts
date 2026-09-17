@@ -29,10 +29,10 @@ describe("AwsSecretsManagerProvider", () => {
   it("fetches SecretString by name once and then serves it from cache", async () => {
     mockSecretsSend.mockResolvedValueOnce({ SecretString: "shh" });
     const provider = new AwsSecretsManagerProvider();
-    await expect(provider.get("/scaler/prod/ANTHROPIC_API_KEY")).resolves.toBe("shh");
-    await expect(provider.get("/scaler/prod/ANTHROPIC_API_KEY")).resolves.toBe("shh");
+    await expect(provider.get("/meridian/prod/ANTHROPIC_API_KEY")).resolves.toBe("shh");
+    await expect(provider.get("/meridian/prod/ANTHROPIC_API_KEY")).resolves.toBe("shh");
     expect(mockSecretsSend).toHaveBeenCalledTimes(1);
-    expect((mockSecretsSend.mock.calls[0]![0] as { input: unknown }).input).toEqual({ SecretId: "/scaler/prod/ANTHROPIC_API_KEY" });
+    expect((mockSecretsSend.mock.calls[0]![0] as { input: unknown }).input).toEqual({ SecretId: "/meridian/prod/ANTHROPIC_API_KEY" });
   });
 
   it("returns undefined (and caches that) for a binary-only secret", async () => {
@@ -56,7 +56,7 @@ describe("S3AttachmentStorage", () => {
   const originalBucket = process.env.DOCS_S3_BUCKET;
   beforeEach(() => {
     mockS3Send.mockReset();
-    process.env.DOCS_S3_BUCKET = "scaler-docs";
+    process.env.DOCS_S3_BUCKET = "meridian-docs";
   });
   afterAll(() => {
     if (originalBucket === undefined) delete process.env.DOCS_S3_BUCKET;
@@ -68,7 +68,7 @@ describe("S3AttachmentStorage", () => {
     const body = Buffer.from("pdf-bytes");
     await new S3AttachmentStorage().put("2026-09-18/t1/c1/INVOICE-a.pdf", body, "application/pdf");
     expect((mockS3Send.mock.calls[0]![0] as { input: unknown }).input).toEqual({
-      Bucket: "scaler-docs",
+      Bucket: "meridian-docs",
       Key: "2026-09-18/t1/c1/INVOICE-a.pdf",
       Body: body,
       ContentType: "application/pdf",
@@ -76,7 +76,7 @@ describe("S3AttachmentStorage", () => {
   });
 
   it("getUrl() builds a virtual-hosted-style URL from the client's resolved region", async () => {
-    await expect(new S3AttachmentStorage().getUrl("k/f.pdf")).resolves.toBe("https://scaler-docs.s3.ap-south-1.amazonaws.com/k/f.pdf");
+    await expect(new S3AttachmentStorage().getUrl("k/f.pdf")).resolves.toBe("https://meridian-docs.s3.ap-south-1.amazonaws.com/k/f.pdf");
   });
 
   it("tolerates an unset bucket env (empty bucket name) rather than crashing at construction", async () => {
@@ -89,7 +89,7 @@ describe("LocalFsAttachmentStorage", () => {
   let tmp: string;
   const original = process.env.DOCS_LOCAL_PATH;
   beforeEach(async () => {
-    tmp = await fs.promises.mkdtemp(path.join(os.tmpdir(), "scaler-attachments-"));
+    tmp = await fs.promises.mkdtemp(path.join(os.tmpdir(), "meridian-attachments-"));
     process.env.DOCS_LOCAL_PATH = tmp;
   });
   afterEach(async () => {

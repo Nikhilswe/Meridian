@@ -7,7 +7,7 @@ import {
   SummariseCaseResponse,
   SummariseCheck,
   Ticket,
-} from "@scaler/shared-types";
+} from "@meridian/shared-types";
 import { ITicketRepository } from "../repositories/ITicketRepository";
 import { IPolicyRepository } from "../repositories/IPolicyRepository";
 import { IOrderRepository } from "../repositories/IOrderRepository";

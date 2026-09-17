@@ -58,9 +58,9 @@ export function LoginPage() {
       <form className="card auth-card" onSubmit={handleSubmit}>
         <div className="auth-card__brand">
           <span className="nav-bar__logo" aria-hidden="true" />
-          <span className="auth-card__brand-name">Scaler</span>
+          <span className="auth-card__brand-name">Meridian</span>
         </div>
-        <h1>Sign in to Scaler</h1>
+        <h1>Sign in to Meridian</h1>
         <p className="auth-card__lede">Support tickets and AI case summaries, in one place.</p>
         <ErrorBanner error={error} fallbackMessage="Login failed. Check your email and password." />
 

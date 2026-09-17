@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { render, type RenderResult } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { vi } from "vitest";
-import type { Ticket } from "@scaler/shared-types";
+import type { Ticket } from "@meridian/shared-types";
 import { App } from "../App";
 import { AuthProvider } from "../context/AuthContext";
 import { ThemeProvider } from "../context/ThemeContext";

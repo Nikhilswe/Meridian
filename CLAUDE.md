@@ -1,4 +1,4 @@
-# Scaler -- project memory for Claude
+# Meridian -- project memory for Claude
 
 Read this before doing any work in this repo. It exists so you don't need a
 prompt re-explaining the architecture every session -- follow it by default.

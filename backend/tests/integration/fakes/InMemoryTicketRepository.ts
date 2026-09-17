@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { CreateTicketInput, Ticket } from "@scaler/shared-types";
+import { CreateTicketInput, Ticket } from "@meridian/shared-types";
 import { ITicketRepository, TicketListPage, UpdateTicketFields } from "../../../src/repositories/ITicketRepository";
 import { decodeCursor, encodeCursor } from "../../../src/repositories/postgres/cursorUtil";
 

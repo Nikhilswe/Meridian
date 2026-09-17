@@ -1,5 +1,5 @@
 /*
- * Scaler frontend -- design system.
+ * Meridian frontend -- design system.
  *
  * Every theme colour, shadow and radius is a CSS custom property declared on
  * :root / [data-theme="light"] / [data-theme="dark"]. Components consume the

@@ -42,7 +42,7 @@ npm run test:coverage --workspace=backend    # unit + integration, fails under 9
 # then the real thing, against a live server + live DB:
 cp .env.example .env                 # from repo root, once
 npm run migrate --workspace=backend   # idempotent -- safe to re-run
-npm run seed --workspace=backend      # re-seeds demo users incl. smoke-test@scaler.local
+npm run seed --workspace=backend      # re-seeds demo users incl. smoke-test@meridian.local
 node backend/dist/server.js &         # or `docker compose up` if Docker Hub is reachable
 SMOKE_BASE_URL=http://localhost:4000 npm run smoke --workspace=backend
 ```

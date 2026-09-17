@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { LoginResponse } from "@scaler/shared-types";
+import { LoginResponse } from "@meridian/shared-types";
 import { IAuthProvider } from "../auth/IAuthProvider";
 import { ValidationError } from "../domain/errors";
 

@@ -1,4 +1,4 @@
-import { Order } from "@scaler/shared-types";
+import { Order } from "@meridian/shared-types";
 import { IOrderRepository } from "../../../src/repositories/IOrderRepository";
 
 export class InMemoryOrderRepository implements IOrderRepository {

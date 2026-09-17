@@ -55,7 +55,7 @@ export function SignupPage() {
       <form className="card auth-card" onSubmit={handleSubmit}>
         <div className="auth-card__brand">
           <span className="nav-bar__logo" aria-hidden="true" />
-          <span className="auth-card__brand-name">Scaler</span>
+          <span className="auth-card__brand-name">Meridian</span>
         </div>
         <h1>Create your account</h1>
         <p className="auth-card__lede">New accounts join as support agents and start receiving tickets right away.</p>

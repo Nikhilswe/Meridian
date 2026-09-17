@@ -1,4 +1,4 @@
-import { AuthenticatedPrincipal } from "@scaler/shared-types";
+import { AuthenticatedPrincipal } from "@meridian/shared-types";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace

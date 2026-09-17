@@ -18,7 +18,7 @@ export function NavBar() {
     <header className="nav-bar">
       <div className="nav-bar__brand">
         <span className="nav-bar__logo" aria-hidden="true" />
-        Scaler
+        Meridian
       </div>
 
       <nav className="nav-bar__tabs">

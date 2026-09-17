@@ -6,7 +6,7 @@ import { LocalJwtAuthProvider } from "../../src/auth/LocalJwtAuthProvider";
 import { CognitoAuthProviderStub } from "../../src/auth/CognitoAuthProviderStub";
 import { buildAuthMiddleware } from "../../src/auth/authMiddleware";
 import { IAuthProvider } from "../../src/auth/IAuthProvider";
-import { User } from "@scaler/shared-types";
+import { User } from "@meridian/shared-types";
 import { IUserRepository, UserWithCredentials } from "../../src/repositories/IUserRepository";
 import { ISecretsProvider } from "../../src/secrets/ISecretsProvider";
 import { ConflictError, UnauthorizedError } from "../../src/domain/errors";
@@ -45,13 +45,13 @@ function userRepo(seed: UserWithCredentials[] = []) {
 describe("LocalJwtAuthProvider", () => {
   let seeded: UserWithCredentials;
   beforeAll(async () => {
-    seeded = { userId: "agent-1", displayName: "Asha", email: "asha@scaler.local", role: "SUPPORT_AGENT", passwordHash: await bcrypt.hash("AgentDemo!123", 4) };
+    seeded = { userId: "agent-1", displayName: "Asha", email: "asha@meridian.local", role: "SUPPORT_AGENT", passwordHash: await bcrypt.hash("AgentDemo!123", 4) };
   });
 
   it("login() bcrypt-verifies and returns an HS256 token whose claims verify() reads back", async () => {
     const provider = new LocalJwtAuthProvider(userRepo([seeded]), secrets({ JWT_SECRET: SECRET }));
-    const { token, user } = await provider.login("asha@scaler.local", "AgentDemo!123");
-    expect(user).toEqual({ userId: "agent-1", displayName: "Asha", email: "asha@scaler.local", role: "SUPPORT_AGENT" });
+    const { token, user } = await provider.login("asha@meridian.local", "AgentDemo!123");
+    expect(user).toEqual({ userId: "agent-1", displayName: "Asha", email: "asha@meridian.local", role: "SUPPORT_AGENT" });
     expect(jwt.decode(token, { complete: true })?.header.alg).toBe("HS256");
     await expect(provider.verify(token)).resolves.toEqual({ userId: "agent-1", role: "SUPPORT_AGENT" });
   });
@@ -59,7 +59,7 @@ describe("LocalJwtAuthProvider", () => {
   it("login() gives the same 401 for unknown email and wrong password (no user enumeration)", async () => {
     const provider = new LocalJwtAuthProvider(userRepo([seeded]), secrets({ JWT_SECRET: SECRET }));
     await expect(provider.login("nobody@x", "pw")).rejects.toThrow(new UnauthorizedError("Invalid email or password"));
-    await expect(provider.login("asha@scaler.local", "wrong")).rejects.toThrow(new UnauthorizedError("Invalid email or password"));
+    await expect(provider.login("asha@meridian.local", "wrong")).rejects.toThrow(new UnauthorizedError("Invalid email or password"));
   });
 
   it("verify() rejects tampered/expired tokens and tokens signed with another secret", async () => {
@@ -73,14 +73,14 @@ describe("LocalJwtAuthProvider", () => {
 
   it("fails closed when JWT_SECRET is not configured", async () => {
     const provider = new LocalJwtAuthProvider(userRepo([seeded]), secrets({}));
-    await expect(provider.login("asha@scaler.local", "AgentDemo!123")).rejects.toThrow("JWT_SECRET is not configured");
+    await expect(provider.login("asha@meridian.local", "AgentDemo!123")).rejects.toThrow("JWT_SECRET is not configured");
   });
 
   it("honours JWT_EXPIRY and falls back to 8h", async () => {
     const original = process.env.JWT_EXPIRY;
     const provider = new LocalJwtAuthProvider(userRepo([seeded]), secrets({ JWT_SECRET: SECRET }));
     const secondsUntilExpiry = async () => {
-      const { token } = await provider.login("asha@scaler.local", "AgentDemo!123");
+      const { token } = await provider.login("asha@meridian.local", "AgentDemo!123");
       const { exp, iat } = jwt.decode(token) as { exp: number; iat: number };
       return exp - iat;
     };
@@ -97,10 +97,10 @@ describe("LocalJwtAuthProvider", () => {
       const repo = userRepo([seeded]);
       const provider = new LocalJwtAuthProvider(repo, secrets({ JWT_SECRET: SECRET }));
 
-      const { token, user } = await provider.signup("  New.Agent@Scaler.Local ", "DemoPass!2026", "  New Agent ");
+      const { token, user } = await provider.signup("  New.Agent@Meridian.Local ", "DemoPass!2026", "  New Agent ");
 
       expect(user.role).toBe("SUPPORT_AGENT");
-      expect(user.email).toBe("new.agent@scaler.local");
+      expect(user.email).toBe("new.agent@meridian.local");
       expect(user.displayName).toBe("New Agent");
       expect(user.userId).toMatch(/^user-[0-9a-f-]{36}$/);
       const stored = repo.create.mock.calls[0]![0];
@@ -108,7 +108,7 @@ describe("LocalJwtAuthProvider", () => {
       expect(await bcrypt.compare("DemoPass!2026", stored.passwordHash)).toBe(true);
       await expect(provider.verify(token)).resolves.toEqual({ userId: user.userId, role: "SUPPORT_AGENT" });
       // ...and a normal login now works for the new account.
-      await expect(provider.login("new.agent@scaler.local", "DemoPass!2026")).resolves.toMatchObject({ user: { userId: user.userId } });
+      await expect(provider.login("new.agent@meridian.local", "DemoPass!2026")).resolves.toMatchObject({ user: { userId: user.userId } });
     });
 
     it("accepts an explicit role for admin-driven flows", async () => {
@@ -120,7 +120,7 @@ describe("LocalJwtAuthProvider", () => {
     it("returns 409 ConflictError (not 401) for a duplicate email, case-insensitively, without creating anything", async () => {
       const repo = userRepo([seeded]);
       const provider = new LocalJwtAuthProvider(repo, secrets({ JWT_SECRET: SECRET }));
-      await expect(provider.signup("ASHA@scaler.local", "password123", "Dup")).rejects.toBeInstanceOf(ConflictError);
+      await expect(provider.signup("ASHA@meridian.local", "password123", "Dup")).rejects.toBeInstanceOf(ConflictError);
       expect(repo.create).not.toHaveBeenCalled();
     });
   });

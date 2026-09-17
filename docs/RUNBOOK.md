@@ -1,12 +1,12 @@
-# Scaler runbook
+# Meridian runbook
 
-How to run, demo, test, and troubleshoot Scaler on your own laptop. Written
+How to run, demo, test, and troubleshoot Meridian on your own laptop. Written
 for everyone in the class: the first half needs no code at all, the second
 half is for anyone changing the code. If you only read one section, read
 **"Ten-minute demo"**.
 
 Contents
-1. [What Scaler does (one screen)](#1-what-scaler-does-one-screen)
+1. [What Meridian does (one screen)](#1-what-meridian-does-one-screen)
 2. [Prerequisites](#2-prerequisites)
 3. [Ten-minute demo](#3-ten-minute-demo)
 4. [Accounts and roles](#4-accounts-and-roles)
@@ -20,9 +20,9 @@ Contents
 
 ---
 
-## 1. What Scaler does (one screen)
+## 1. What Meridian does (one screen)
 
-Scaler is a support-ticketing tool with an AI **case summariser**.
+Meridian is a support-ticketing tool with an AI **case summariser**.
 
 1. A support rep types a customer complaint into a ticket.
 2. The ticket is **automatically assigned** to a support agent (round-robin).
@@ -54,7 +54,7 @@ the full demo.
 
 ```bash
 # 0. Get the code and install once
-git clone <repo-url> scaler && cd scaler
+git clone <repo-url> meridian && cd meridian
 npm install
 
 # 1. Configuration -- copy the template; the defaults work out of the box
@@ -62,7 +62,7 @@ cp .env.example .env
 
 # 2. Database -- pick ONE
 docker compose up -d postgres                # a) Docker (simplest)
-#   or, with a local Postgres:  createdb scaler  and set DATABASE_URL in .env
+#   or, with a local Postgres:  createdb meridian  and set DATABASE_URL in .env
 
 # 3. Local AI (recommended). Skip this to run without any AI -- see section 5.
 ollama pull gemma3:4b                          # ~3 GB, one time
@@ -81,7 +81,7 @@ npm run dev:frontend                           # http://localhost:5173
 
 Then in the browser at http://localhost:5173:
 
-1. **Sign in** as `asha.kapoor@scaler.local` / `AgentDemo!123` (or click
+1. **Sign in** as `asha.kapoor@meridian.local` / `AgentDemo!123` (or click
    **Sign up** to make your own agent account -- it starts receiving tickets
    immediately).
 2. On **Tickets**, describe a complaint, e.g. *"Customer says their wireless
@@ -118,11 +118,11 @@ Seeded by `npm run seed` (see `backend/src/db/seed.ts`):
 
 | Email | Password | Role | Can |
 |---|---|---|---|
-| `asha.kapoor@scaler.local` | `AgentDemo!123` | SUPPORT_AGENT | create tickets, summarise + submit **their own** cases |
-| `marco.silva@scaler.local` | `AgentDemo!123` | SUPPORT_AGENT | same |
-| `wen.zhao@scaler.local` | `AgentDemo!123` | SUPPORT_AGENT | same |
-| `priya.nair@scaler.local` | `ReviewerDemo!123` | REVIEWER | see every ticket, summarise any case |
-| `smoke-test@scaler.local` | `SmokeTest!123` | SUPPORT_AGENT | reserved for the automated smoke test |
+| `asha.kapoor@meridian.local` | `AgentDemo!123` | SUPPORT_AGENT | create tickets, summarise + submit **their own** cases |
+| `marco.silva@meridian.local` | `AgentDemo!123` | SUPPORT_AGENT | same |
+| `wen.zhao@meridian.local` | `AgentDemo!123` | SUPPORT_AGENT | same |
+| `priya.nair@meridian.local` | `ReviewerDemo!123` | REVIEWER | see every ticket, summarise any case |
+| `smoke-test@meridian.local` | `SmokeTest!123` | SUPPORT_AGENT | reserved for the automated smoke test |
 
 **Sign up** (`/signup`) creates a SUPPORT_AGENT. You cannot pick a higher
 role at sign-up; promoting someone is an admin action (edit the `role`
@@ -244,7 +244,7 @@ browser storage, and **deterministic gates before any model call**.
 | Backend in Docker (`docker compose up`) | `docker compose logs -f backend` |
 | Frontend | browser DevTools console; the Vite terminal shows build errors |
 | Ollama | `ollama ps`; on macOS `~/.ollama/logs/server.log` |
-| AWS | CloudWatch log groups `/aws/lambda/scaler-<env>-{api,summarise-case,assign-ticket}`; alarms + dashboard per `infra/README.md` |
+| AWS | CloudWatch log groups `/aws/lambda/meridian-<env>-{api,summarise-case,assign-ticket}`; alarms + dashboard per `infra/README.md` |
 
 Every unexpected server error is logged as `Unhandled error: <message>`
 followed by a stack trace; every AI provider failure as `<Provider> API
@@ -281,7 +281,7 @@ are no credentials in this repo. When you have an account:
   not implemented yet; the Lambda handlers are stubs).
 * `docs/aws-cost-notes.md` -- why the whole thing fits in a small demo
   budget, alarm-by-alarm.
-* Secrets: `/scaler/<env>/ANTHROPIC_API_KEY` in Secrets Manager, read
+* Secrets: `/meridian/<env>/ANTHROPIC_API_KEY` in Secrets Manager, read
   through the same `ISecretsProvider` interface the local `.env` path uses.
 * Sign-up in AWS mode is handled by Cognito, not by the app's `/signup`
   endpoint (which returns 401 there on purpose).

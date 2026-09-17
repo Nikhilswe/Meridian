@@ -1,4 +1,4 @@
-import { Policy, SuppliedFacts } from "@scaler/shared-types";
+import { Policy, SuppliedFacts } from "@meridian/shared-types";
 
 export interface LLMGenerateInput {
   ticketOverview: string;

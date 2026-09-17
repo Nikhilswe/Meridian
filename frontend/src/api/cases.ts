@@ -4,7 +4,7 @@ import type {
   SummariseCaseResponse,
   Ticket,
   TicketFactsInput,
-} from "@scaler/shared-types";
+} from "@meridian/shared-types";
 import { apiGet, apiPatch, apiPost } from "./client";
 
 export function listCases(params?: PaginatedRequest): Promise<PaginatedResponse<Ticket>> {

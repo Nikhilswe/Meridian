@@ -15,7 +15,7 @@ async function loginAs(app: Express, email: string, password: string): Promise<s
   return response.body.token as string;
 }
 
-describe("Scaler backend integration (full HTTP stack, in-memory adapters)", () => {
+describe("Meridian backend integration (full HTTP stack, in-memory adapters)", () => {
   let app: Express;
   let ticketRepo: InMemoryTicketRepository;
   let userRepo: InMemoryUserRepository;
@@ -47,7 +47,7 @@ describe("Scaler backend integration (full HTTP stack, in-memory adapters)", () 
   });
 
   describe("self-service sign-up", () => {
-    const newcomer = { email: "newcomer@scaler.local", password: "NewcomerPass!1", displayName: "New Comer" };
+    const newcomer = { email: "newcomer@meridian.local", password: "NewcomerPass!1", displayName: "New Comer" };
 
     it("creates a SUPPORT_AGENT, returns 201 + a token that works immediately, and the account can log in normally", async () => {
       const response = await request(app).post("/api/auth/signup").send(newcomer);
@@ -81,14 +81,14 @@ describe("Scaler backend integration (full HTTP stack, in-memory adapters)", () 
     });
 
     it("ignores any role the caller tries to claim -- everyone signs up as SUPPORT_AGENT", async () => {
-      const response = await request(app).post("/api/auth/signup").send({ email: "wannabe@scaler.local", password: "Password!123", displayName: "W", role: "ADMIN" });
+      const response = await request(app).post("/api/auth/signup").send({ email: "wannabe@meridian.local", password: "Password!123", displayName: "W", role: "ADMIN" });
       expect(response.status).toBe(201);
       expect(response.body.user.role).toBe("SUPPORT_AGENT");
     });
 
     it("a signed-up agent is a real SUPPORT_AGENT the assignment pool can draw from (bounded by assignment.agentPoolSize)", async () => {
       const agents = await userRepo.listByRole("SUPPORT_AGENT");
-      expect(agents.map((a) => a.email)).toEqual(expect.arrayContaining([newcomer.email, "wannabe@scaler.local"]));
+      expect(agents.map((a) => a.email)).toEqual(expect.arrayContaining([newcomer.email, "wannabe@meridian.local"]));
       // The fixture pins agentPoolSize=2 so the round-robin tests above stay
       // deterministic; the pool is agents[0..1] by userId order, so seeded
       // "agent-*" ids stay in the pool and "user-<uuid>" newcomers wait for

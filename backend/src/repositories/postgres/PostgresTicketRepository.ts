@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { Pool } from "pg";
 import { inject, injectable } from "tsyringe";
-import { CreateTicketInput, Ticket } from "@scaler/shared-types";
+import { CreateTicketInput, Ticket } from "@meridian/shared-types";
 import { ITicketRepository, TicketListPage, UpdateTicketFields } from "../ITicketRepository";
 import { mapTicketRow } from "./rowMappers";
 import { decodeCursor, encodeCursor } from "./cursorUtil";
